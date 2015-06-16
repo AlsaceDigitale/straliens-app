@@ -41,6 +41,12 @@ App.controller 'playCtrl', [
             zoom: 15
 ]
 
+App.controller 'loginCtrl', [
+    '$scope'
+    '$state'
+    ($scope, $state) ->
+]
+
 # RUN !!
 # ------
 App.run [

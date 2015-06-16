@@ -1,0 +1,11 @@
+.container
+    .row
+        .col-md-12
+            form
+                .form-group
+                    label(for='firstname') Username
+                    input#firstname.form-control(type='text', name='fname', ng-model='mailchimp.FNAME', placeholder='Nom d\'utilisateur')
+                .form-group
+                    label(for='email') Email
+                    input#email.form-control(type='email', name='email', ng-model='mailchimp.EMAIL', placeholder='Tapez votre addresse email', required='')
+                button.btn.btn-lg.btn-primary.fullwidth Valider
