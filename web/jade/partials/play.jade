@@ -3,14 +3,18 @@
         .left SCORE {{user.score}}
         .right ENERGIE {{user.energy}}
     section
-        div(map-lazy-load='http://maps.google.com/maps/api/js')
-            map(center='48.5803, 7.7536 ' zoom='15' max-zoom="20" min-zoom="15" map-type-id="SATELLITE" on-center_changed="test()")
-                marker(
-                    ng-repeat="point in points"
-                    position="{{point.coordinates}}"
-                    title="{{point.name}}"
-                    draggable="false"
-                    visible="true")
+
+        ui-gmap-google-map(
+            center='map.center'
+            zoom='map.zoom'
+            options="map.options"
+            events="map.events")
+            ui-gmap-markers(
+                models="points"
+                coords="'coordinates'"
+                icon="'icon'"
+                options="'options'"
+                labelContent="'id'")
 
 
     footer
