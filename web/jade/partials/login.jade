@@ -1,11 +1,12 @@
-.container
-    .row
-        .col-md-12
+.overlay
+    .login
+        .wrapper.col-xs-12.col-sm-6.col-sm-offset-3
             form
                 .form-group
-                    label(for='firstname') Username
-                    input#firstname.form-control(type='text', name='fname', ng-model='mailchimp.FNAME', placeholder='Nom d\'utilisateur')
+                    label(for='firstname') Nom d'utilisateur
+                    input#firstname.form-control(type='text', name='fname', ng-model='mailchimp.FNAME', placeholder='Nom d\'utilisateur' required='')
                 .form-group
                     label(for='email') Email
                     input#email.form-control(type='email', name='email', ng-model='mailchimp.EMAIL', placeholder='Tapez votre addresse email', required='')
-                button.btn.btn-lg.btn-primary.fullwidth Valider
+                hr
+                button.btn.btn-primary.btn-fw(ng-click="validate(this)") Valider

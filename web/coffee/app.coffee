@@ -11,18 +11,16 @@ App.config ($stateProvider, $urlRouterProvider) ->
     $urlRouterProvider.otherwise '/play'
 
     $stateProvider
+        .state 'play',
+            url: '/play'
+            controller: 'playCtrl'
+            title: 'Accueil'
+
         .state 'login',
             url: '/login'
             controller: 'loginCtrl'
             title: 'Accueil'
             templateUrl: 'partials/login.html'
-
-        .state 'play',
-            url: '/play'
-            controller: 'playCtrl'
-            title: 'Accueil'
-            templateUrl: 'partials/play.html'
-
 
         .state 'check',
             url: '/check/:id'
@@ -33,7 +31,7 @@ App.config ($stateProvider, $urlRouterProvider) ->
 
 # Main controller
 # ---------------
-App.controller 'AppController', [
+App.controller 'appCtrl', [
     '$scope'
     ($scope) ->
 ]
@@ -50,10 +48,14 @@ App.controller 'checkCtrl', [
 # Index page controller
 # ---------------------
 App.controller 'playCtrl', [
+    '$rootScope'
     '$scope'
     '$state'
     'uiGmapGoogleMapApi'
-    ($scope, $state, uiGmapGoogleMapApi) ->
+    ($rootScope, $scope, $state, uiGmapGoogleMapApi) ->
+        if !$rootScope.validUser()
+            $state.go 'login'
+
         $scope.points =
         [
             {
@@ -480,9 +482,22 @@ App.controller 'playCtrl', [
 ]
 
 App.controller 'loginCtrl', [
+    '$rootScope'
     '$scope'
     '$state'
-    ($scope, $state) ->
+    '$http'
+    ($rootScope, $scope, $state, $http) ->
+        $scope.validate = (form) ->
+            $http.post "http://localhost:3000/api/users", nickname: form.mailchimp.FNAME
+            .success (data) ->
+                $rootScope.user.id = data.id
+                $rootScope.user.name = data.nickname
+                $rootScope.user.teamId = data.teamId
+
+                $state.go 'play'
+            .error (data) ->
+                # TODO: make something with the error
+                console.log data
 ]
 
 # RUN !!
@@ -494,6 +509,11 @@ App.run [
         $rootScope.$state = $state
         # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
+
+        $rootScope.validUser = () ->
+            # TODO : check with token/whatever
+            return !!$rootScope.user.name
+
         $rootScope.user =
             team: 'straliens'
             score: 0
