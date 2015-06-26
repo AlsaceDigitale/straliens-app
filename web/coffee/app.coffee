@@ -1,4 +1,4 @@
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps']
+@App = angular.module 'straliens', ['ui.router', 'ngWebSocket', 'uiGmapgoogle-maps']
 
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
@@ -53,11 +53,6 @@ App.controller 'playCtrl', [
     '$state'
     'uiGmapGoogleMapApi'
     ($rootScope, $scope, $state, uiGmapGoogleMapApi) ->
-        # socket endpoints (bidon)
-        socket.on 'energy', (data) ->
-          $rootScope.user.energy = data.energy
-          return
-
 
         if !$rootScope.validUser()
             $state.go 'login'
@@ -511,7 +506,9 @@ App.controller 'loginCtrl', [
 App.run [
     '$rootScope'
     '$state'
-    ($rootScope, $state) ->
+    '$window'
+    '$websocket'
+    ($rootScope, $state, $window, $websocket) ->
         $rootScope.$state = $state
         # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
@@ -525,5 +522,6 @@ App.run [
             score: 0
             energy: 0
 
-        $routeScope.socket = io('http://localhost');
+        $rootScope.ws = $websocket("ws://127.0.0.1:3000/ws");
+        # $rootScope.ws.send JSON.stringify(action: "test")
 ]
