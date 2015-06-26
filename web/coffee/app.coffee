@@ -1,5 +1,4 @@
-@App = angular.module 'straliens', ['ui.router', 'ngWebSocket', 'uiGmapgoogle-maps']
-
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ngWebSocket', 'ui.bootstrap']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         # key: 'your api key'
@@ -19,8 +18,14 @@ App.config ($stateProvider, $urlRouterProvider) ->
         .state 'login',
             url: '/login'
             controller: 'loginCtrl'
-            title: 'Accueil'
+            title: 'Login'
             templateUrl: 'partials/login.html'
+
+        .state 'signup',
+            url: '/signup'
+            controller: 'loginCtrl'
+            title: 'SignUp'
+            templateUrl: 'partials/signup.html'
 
         .state 'check',
             url: '/check/:id'
@@ -488,8 +493,27 @@ App.controller 'loginCtrl', [
     '$state'
     '$http'
     ($rootScope, $scope, $state, $http) ->
+        $scope.teams = $http.get "http://localhost:3000/api/teams"
+          .success (data) ->
+            data
+
         $scope.validate = (form) ->
             $http.post "http://localhost:3000/api/users", nickname: form.mailchimp.FNAME
+            .success (data) ->
+                $rootScope.user.id = data.id
+                $rootScope.user.name = data.nickname
+                $rootScope.user.teamId = data.teamId
+
+                $state.go 'play'
+            .error (data) ->
+                # TODO: make something with the error
+                console.log data
+
+        $scope.create = (form) ->
+            $http.post "http://localhost:3000/api/users",
+              nickname: form.mailchimp.FNAME
+              email: form.mailchimp.EMAIL
+              password: form.mailchimp.PWD
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
