@@ -53,6 +53,12 @@ App.controller 'playCtrl', [
     '$state'
     'uiGmapGoogleMapApi'
     ($rootScope, $scope, $state, uiGmapGoogleMapApi) ->
+        # socket endpoints (bidon)
+        socket.on 'energy', (data) ->
+          $rootScope.user.energy = data.energy
+          return
+
+
         if !$rootScope.validUser()
             $state.go 'login'
 
@@ -518,4 +524,6 @@ App.run [
             team: 'straliens'
             score: 0
             energy: 0
+
+        $routeScope.socket = io('http://localhost');
 ]
