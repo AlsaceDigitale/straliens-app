@@ -68,37 +68,34 @@ App.controller 'playCtrl', [
             data.forEach (obj, key) ->
                 $http.get "http://localhost:3000/api/points/"+ obj.id
                 .success (data) ->
-                    color = if data.side == "STRALIENS" then '#0AAE14' else '#238CFF'
                     obj.coordinates = { latitude: obj.lat, longitude: obj.lng }
                     obj.options = {
-                        labelContent: data.energy
-                        labelAnchor: "2 -8"
-                        labelClass: 'map-label'
-                        labelStyle: {color: color}
+                        labelContent: Math.abs(data.energy)
+                        labelAnchor: "0 0"
+                        labelClass: 'map-label side-' + data.side
                     }
                     obj.icon =
                         #circle
-                        path: 'M 100, 100
-                                    m -75, 0
-                                    a 75,75 0 1,0 150,0
-                                    a 75,75 0 1,0 -150,0'
-                        fillOpacity: 0.15
-                        scale: 0.18
-                        strokeColor: color
-                        strokeWeight: 6
-                        strokeOpacity: 0.9
+                        path: ''
                 $scope.points = data
 
         $scope.map =
             zoom: 15
             center:
-                latitude: 48.5803
-                longitude: 7.7536
+                #center on cathedrale
+                latitude: 48.5819
+                longitude: 7.75104
             options:
-                minZoom: 15
+                minZoom: 10
                 maxZoom: 20
                 #mapTypeId: "satellite"
+                panControl: false
+                zoomControl: false
+                mapTypeControl: false
+                scaleControl: false
                 streetViewControl: false
+                overviewMapControl: false
+                mapTypeControl: false
 
             events:
                 center_changed: (map) ->
