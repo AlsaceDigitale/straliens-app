@@ -90,38 +90,12 @@ App.controller 'playCtrl', [
                 maxZoom: 20
                 #mapTypeId: "satellite"
                 panControl: false
-                zoomControl: false
+                zoomControl: true
                 mapTypeControl: false
                 scaleControl: false
                 streetViewControl: false
                 overviewMapControl: false
                 mapTypeControl: false
-
-            events:
-                center_changed: (map) ->
-                    allowedBounds =
-                        sw: [48.575617, 7.732757]
-                        ne: [48.585780, 7.775462]
-                    C = map.getCenter()
-                    if C.lng() > allowedBounds.ne[1] || C.lng() < allowedBounds.sw[1] || C.lat() > allowedBounds.ne[0] || C.lat() < allowedBounds.sw[0]
-                        X = C.lng()
-                        Y = C.lat()
-
-                        AmaxX = allowedBounds.ne[1]
-                        AmaxY = allowedBounds.ne[0]
-                        AminX = allowedBounds.sw[1]
-                        AminY = allowedBounds.sw[0]
-
-                        if (X < AminX)
-                            X = AminX
-                        if (X > AmaxX)
-                            X = AmaxX
-                        if (Y < AminY)
-                            Y = AminY
-                        if (Y > AmaxY)
-                            Y = AmaxY
-
-                        map.panTo {lat: Y, lng: X}
 
         #uiGmapGoogleMapApi.then (maps) ->
 ]
