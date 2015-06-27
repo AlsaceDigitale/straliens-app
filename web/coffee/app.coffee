@@ -66,27 +66,27 @@ App.controller 'playCtrl', [
         $http.get "http://localhost:3000/api/points"
         .success (data) ->
             data.forEach (obj, key) ->
-                obj.team = if Math.random() > 0.5 then "straliens" else "terriens"
-                obj.power = Math.round (Math.random() * 100)
-                color = if obj.team == "straliens" then '#0AAE14' else '#238CFF'
-                obj.coordinates = { latitude: obj.lat, longitude: obj.lng }
-                obj.options = {
-                    labelContent: obj.power
-                    labelAnchor: "2 -8"
-                    labelClass: 'map-label'
-                    labelStyle: {color: color}
-                }
-                obj.icon =
-                    #circle
-                    path: 'M 100, 100
-                                m -75, 0
-                                a 75,75 0 1,0 150,0
-                                a 75,75 0 1,0 -150,0'
-                    fillOpacity: 0.15
-                    scale: 0.18
-                    strokeColor: color
-                    strokeWeight: 6
-                    strokeOpacity: 0.9
+                $http.get "http://localhost:3000/api/points/"+ obj.id
+                .success (data) ->
+                    color = if data.side == "STRALIENS" then '#0AAE14' else '#238CFF'
+                    obj.coordinates = { latitude: obj.lat, longitude: obj.lng }
+                    obj.options = {
+                        labelContent: data.energy
+                        labelAnchor: "2 -8"
+                        labelClass: 'map-label'
+                        labelStyle: {color: color}
+                    }
+                    obj.icon =
+                        #circle
+                        path: 'M 100, 100
+                                    m -75, 0
+                                    a 75,75 0 1,0 150,0
+                                    a 75,75 0 1,0 -150,0'
+                        fillOpacity: 0.15
+                        scale: 0.18
+                        strokeColor: color
+                        strokeWeight: 6
+                        strokeOpacity: 0.9
                 $scope.points = data
 
         $scope.map =
