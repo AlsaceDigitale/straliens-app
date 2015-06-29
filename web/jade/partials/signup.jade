@@ -4,15 +4,15 @@
             form
                 .form-group
                     label(for='firstname') Nom d'utilisateur
-                    input#firstname.form-control(type='text', name='fname', ng-model='mailchimp.FNAME', placeholder='Nom d\'utilisateur' required)
+                    input#firstname.form-control(type='text', name='fname', ng-model='nickname', placeholder='Nom d\'utilisateur')
                 .form-group
                     label(for='email') Email
-                    input#email.form-control(type='email', name='email', ng-model='mailchimp.EMAIL', placeholder='Tapez votre addresse email', required='')
+                    input#email.form-control(type='email', name='email', ng-model='email', placeholder='Tapez votre addresse email', required='')
                 .form-group
                     label(for='password') Password
-                    input#password.form-control(type='password', name='password', ng-model='mailchimp.PWD', placeholder='Tapez votre mot de passe', required='')
+                    input#password.form-control(type='password', name='password', ng-model='password', placeholder='Tapez votre mot de passe', required='')
                 .form-group
-                    label Choix de la Team
+                    label Choix de la Team (optionnel)
                     input.form-control(type='text', ng-model='selected', typeahead='team for team in teams | filter:$viewValue ' typeahead-loading='loadingTeams')
                     i.glyphicon.glyphicon-refresh(ng-show="loadingTeams")
                 .form-group(ng-if="showTeamPwd")

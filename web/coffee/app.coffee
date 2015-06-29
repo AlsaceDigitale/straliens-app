@@ -194,9 +194,9 @@ App.controller 'signupCtrl', [
 
         $scope.create = (form) ->
             $http.post 'http://localhost:3000/api/users?sections=team',
-                nickname: form.mailchimp.FNAME
-                email: form.mailchimp.EMAIL
-                password: form.mailchimp.PWD
+                nickname: form.nickname
+                email: form.email
+                password: form.password
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
@@ -211,8 +211,6 @@ App.controller 'signupCtrl', [
                 console.log data
 ]
 
-
-
 # RUN !!
 # ------
 App.run [
@@ -223,6 +221,8 @@ App.run [
     '$cookies'
     ($rootScope, $state, $window, $websocket, $cookies) ->
         $rootScope.$state = $state
+        $rootScope.$cookies = $cookies
+
         # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
 
