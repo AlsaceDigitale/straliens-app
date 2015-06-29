@@ -12,7 +12,16 @@
                     label(for='password') Password
                     input#password.form-control(type='password', name='password', ng-model='mailchimp.PWD', placeholder='Tapez votre mot de passe', required='')
                 .form-group
-                    label(for='team') Choix de la Team
-                    input#team.form-control(type='text', name='team', ng-model='selected', typeahead="team.slogan for team in teams | filter:$viewValue | limitTo:8", placeholder='Tapez votre mot de passe', required='')
+                    label Choix de la Team
+                    input.form-control(type='text', ng-model='selected', typeahead='state for state in states | filter:$viewValue')
+                .form-group(ng-if="showTeamPwd")
+                    label(for='team') Team Password
+                    input#teamPwd.form-control(type='password'
+                      name='teamPwd'
+                      ng-model="teamPwd"
+                      placeholder='Tapez le mot de passe de la team'
+                      required='')
                 hr
+                pre
+                  Model: {{selected | json}}
                 button.btn.btn-primary.btn-fw(ng-click="create(this)") Valider

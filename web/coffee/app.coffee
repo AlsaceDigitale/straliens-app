@@ -493,9 +493,15 @@ App.controller 'loginCtrl', [
     '$state'
     '$http'
     ($rootScope, $scope, $state, $http) ->
+        $scope.showTeamPwd = false
         $scope.teams = $http.get "http://localhost:3000/api/teams"
           .success (data) ->
+            console.log data
             data
+
+        $scope.onSelect = ($item) ->
+          $scope.team = $item
+          $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
             $http.post "http://localhost:3000/api/users", nickname: form.mailchimp.FNAME
