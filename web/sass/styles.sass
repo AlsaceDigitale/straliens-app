@@ -5,60 +5,9 @@ body
     margin: 0
     font-family: "Arial"
 
-// Main game view
-.game
-    color: #24D14D
-    font-size: 1.8em
-
-    nav
-        z-index: 100
-        position: absolute
-        height: $topBarHeight
-        min-width: 100%
-        line-height: $topBarHeight
-        background: rgba(0,0,0,0.6)
-
-        > div
-            padding: 0 8px
-
-    // Hacking the Google's Matrix there
-    .angular-google-map-container
-        height: 100%
-        .map-label
-            font-family: "Lucida Grande", "Arial", sans-serif
-            font-size: 16px
-            font-weight: bold
-            text-align: center
-            width: 40px
-            white-space: nowrap
-
-    footer
-        z-index: 100
-        position: absolute
-        bottom: 0
-        height: $bottomBarHeight
-        min-width: 100%
-        line-height: $bottomBarHeight
-        background: rgba(0,0,0,1)
-
-// other view container
-.overlay
-    position: absolute
-    top: 0
-    left: 0
-    height: 100%
-    width: 100%
-    padding: $topBarHeight 0 $bottomBarHeight 0
-    background: rgba(0,0,0,0.6)
-
-    .login
-        padding: 10px
-        .wrapper
-            padding: 5px 15px
-            background-color: rgba(255, 255, 255, 0.1)
-            form label
-                font-size: 18px
-                color: #111
+@import "var"
+@import "game"
+@import "overlay"
 
 .login
     height: 100%

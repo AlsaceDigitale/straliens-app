@@ -1,0 +1,55 @@
+// Main game view
+.game
+    color: $green
+    font-size: 1.8em
+
+    nav
+        z-index: 100
+        position: absolute
+        height: $topBarHeight
+        min-width: 100%
+        line-height: $topBarHeight
+        background: rgba(0,0,0,0.6)
+
+        > div
+            padding: 0 8px
+
+    // Hacking the Google's Matrix there
+    .angular-google-map-container
+        height: 100%
+        .map-label
+            font-family: "Lucida Grande", "Arial", sans-serif
+            font-size: 16px
+            white-space: nowrap
+            transform: translate(-50%, -50%)
+            height: 45px
+            width: 45px
+            border-radius: 1000px
+            border-color: $grey
+            border-width: 4px
+            border-style: solid
+            color: $grey
+            //center text in div
+            display: flex !important
+            align-items: center
+            justify-content: center
+            background: rgba($black, 0.7)
+        .side-STRALIENS
+            border-color: $green
+            color: $green
+        .side-EARTHLINGS
+            border-color: $blue
+            color: $blue
+        .side-NEUTRAL
+            border-color: $grey
+            color: $grey
+        .map-label
+
+    footer
+        z-index: 100
+        position: absolute
+        bottom: 0
+        height: $bottomBarHeight
+        min-width: 100%
+        line-height: $bottomBarHeight
+        background: rgba(0,0,0,1)
