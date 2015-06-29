@@ -5,6 +5,55 @@ App.config (uiGmapGoogleMapApiProvider) ->
         libraries: 'visualization'
     }
 
+App.config [
+    '$httpProvider'
+    ($httpProvider) ->
+        # Use x-www-form-urlencoded Content-Type
+        $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
+
+        ###*
+        # The workhorse; converts an object to x-www-form-urlencoded serialization.
+        # @param {Object} obj
+        # @return {String}
+        ###
+
+        param = (obj) ->
+            query = ''
+            name = undefined
+            value = undefined
+            fullSubName = undefined
+            subName = undefined
+            subValue = undefined
+            innerObj = undefined
+            i = undefined
+            for name of obj
+                value = obj[name]
+                if value instanceof Array
+                    i = 0
+                    while i < value.length
+                        subValue = value[i]
+                        fullSubName = name + '[' + i + ']'
+                        innerObj = {}
+                        innerObj[fullSubName] = subValue
+                        query += param(innerObj) + '&'
+                        ++i
+                else if value instanceof Object
+                    for subName of value
+                        subValue = value[subName]
+                        fullSubName = name + '[' + subName + ']'
+                        innerObj = {}
+                        innerObj[fullSubName] = subValue
+                        query += param(innerObj) + '&'
+                else if value != undefined and value != null
+                    query += encodeURIComponent(name) + '=' + encodeURIComponent(value) + '&'
+            if query.length then query.substr(0, query.length - 1) else query
+
+        # Override $http service's default transformRequest
+        $httpProvider.defaults.transformRequest = [ (data) ->
+            if angular.isObject(data) and String(data) != '[object File]' then param(data) else data
+        ]
+]
+
 App.config ($stateProvider, $urlRouterProvider) ->
     $urlRouterProvider.otherwise '/play'
 
@@ -22,7 +71,7 @@ App.config ($stateProvider, $urlRouterProvider) ->
 
     .state 'signup',
         url: '/signup'
-        controller: 'loginCtrl'
+        controller: 'signupCtrl'
         title: 'SignUp'
         templateUrl: 'partials/signup.html'
 
@@ -101,22 +150,14 @@ App.controller 'loginCtrl', [
     ($rootScope, $scope, $state, $http) ->
         $scope.showTeamPwd = false
 
-        $http.get "http://localhost:3000/api/teams"
-        .success (data) ->
-            if !data or data.length == 0
-                data = [
-                    "straliens"
-                    "humain"
-                ]
-            $scope.teams = data
-
         $scope.onSelect = ($item) ->
             $scope.team = $item
             $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
-            $http.post "http://localhost:3000/api/users",
-                nickname: form.mailchimp.FNAME
+            $http.post "http://localhost:3000/api/services/login",
+                nickname: form.nickname
+                password: form.password
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
@@ -126,9 +167,28 @@ App.controller 'loginCtrl', [
             .error (data) ->
                 # TODO: make something with the error
                 console.log data
+]
+
+
+App.controller 'signupCtrl', [
+    '$rootScope'
+    '$scope'
+    '$state'
+    '$http'
+    ($rootScope, $scope, $state, $http) ->
+        $scope.showTeamPwd = false
+
+        $http.get "http://localhost:3000/api/teams"
+        .success (data) ->
+            if !data or data.length == 0
+                data = [
+                    "straliens"
+                    "terrien"
+                ]
+            $scope.teams = data
 
         $scope.create = (form) ->
-            $http.post "http://localhost:3000/api/users",
+            $http.post 'http://localhost:3000/api/users',
                 nickname: form.mailchimp.FNAME
                 email: form.mailchimp.EMAIL
                 password: form.mailchimp.PWD
@@ -142,6 +202,8 @@ App.controller 'loginCtrl', [
                 # TODO: make something with the error
                 console.log data
 ]
+
+
 
 # RUN !!
 # ------
