@@ -1,4 +1,4 @@
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ngWebSocket', 'ui.bootstrap']
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ngWebSocket', 'ui.bootstrap', 'ngCookies']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         v: '3.17'
@@ -131,7 +131,7 @@ App.controller 'playCtrl', [
                 latitude: 48.5819
                 longitude: 7.75104
             options:
-                minZoom: 10
+                minZoom: 15
                 maxZoom: 20
                 panControl: false
                 zoomControl: true
@@ -147,7 +147,8 @@ App.controller 'loginCtrl', [
     '$scope'
     '$state'
     '$http'
-    ($rootScope, $scope, $state, $http) ->
+    '$cookies'
+    ($rootScope, $scope, $state, $http, $cookies) ->
         $scope.showTeamPwd = false
 
         $scope.onSelect = ($item) ->
@@ -155,13 +156,16 @@ App.controller 'loginCtrl', [
             $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
-            $http.post "http://localhost:3000/api/services/login",
+            $http.post "http://localhost:3000/api/services/login?sections=team",
                 nickname: form.nickname
                 password: form.password
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
                 $rootScope.user.teamId = data.teamId
+                $rootScope.user.team = data.team
+
+                $cookies.putObject("user", $rootScope.user)
 
                 $state.go 'play'
             .error (data) ->
@@ -175,7 +179,8 @@ App.controller 'signupCtrl', [
     '$scope'
     '$state'
     '$http'
-    ($rootScope, $scope, $state, $http) ->
+    '$cookies'
+    ($rootScope, $scope, $state, $http, $cookies) ->
         $scope.showTeamPwd = false
 
         $http.get "http://localhost:3000/api/teams"
@@ -188,7 +193,7 @@ App.controller 'signupCtrl', [
             $scope.teams = data
 
         $scope.create = (form) ->
-            $http.post 'http://localhost:3000/api/users',
+            $http.post 'http://localhost:3000/api/users?sections=team',
                 nickname: form.mailchimp.FNAME
                 email: form.mailchimp.EMAIL
                 password: form.mailchimp.PWD
@@ -196,6 +201,9 @@ App.controller 'signupCtrl', [
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
                 $rootScope.user.teamId = data.teamId
+                $rootScope.user.team = data.team
+
+                $cookies.putObject("user", $rootScope.user)
 
                 $state.go 'play'
             .error (data) ->
@@ -212,19 +220,21 @@ App.run [
     '$state'
     '$window'
     '$websocket'
-    ($rootScope, $state, $window, $websocket) ->
+    '$cookies'
+    ($rootScope, $state, $window, $websocket, $cookies) ->
         $rootScope.$state = $state
         # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
 
+        $rootScope.user = if $cookies.getObject('user') then $cookies.getObject('user') else
+            team: null
+            teamId: -1
+            score: 0
+            energy: 0
+
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
             return !!$rootScope.user.name
-
-        $rootScope.user =
-            team: 'straliens'
-            score: 0
-            energy: 0
 
         $rootScope.ws = $websocket "ws://127.0.0.1:8000/ws"
         # $rootScope.ws.send JSON.stringify(action: "test")

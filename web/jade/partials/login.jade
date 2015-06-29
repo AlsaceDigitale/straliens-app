@@ -8,5 +8,6 @@
                 .form-group
                     label(for='password') Mot de passe
                     input#email.form-control(type='password', name='password', ng-model='password', placeholder='Tapez votre mot de passe', required='')
-                hr
                 button.btn.btn-primary.btn-fw(ng-click="validate(this)") Valider
+                hr
+            button.btn.btn-warning.btn-fw.signup(ui-sref="signup") Inscription
