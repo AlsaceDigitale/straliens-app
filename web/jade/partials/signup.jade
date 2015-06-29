@@ -4,7 +4,7 @@
             form
                 .form-group
                     label(for='firstname') Nom d'utilisateur
-                    input#firstname.form-control(type='text', name='fname', ng-model='mailchimp.FNAME', placeholder='Nom d\'utilisateur' required='')
+                    input#firstname.form-control(type='text', name='fname', ng-model='mailchimp.FNAME', placeholder='Nom d\'utilisateur' required)
                 .form-group
                     label(for='email') Email
                     input#email.form-control(type='email', name='email', ng-model='mailchimp.EMAIL', placeholder='Tapez votre addresse email', required='')
@@ -13,7 +13,8 @@
                     input#password.form-control(type='password', name='password', ng-model='mailchimp.PWD', placeholder='Tapez votre mot de passe', required='')
                 .form-group
                     label Choix de la Team
-                    input.form-control(type='text', ng-model='selected', typeahead='state for state in states | filter:$viewValue')
+                    input.form-control(type='text', ng-model='selected', typeahead='team for team in teams' typeahead-loading='loadingTeams')
+                    i.glyphicon.glyphicon-refresh(ng-show="loadingTeams")
                 .form-group(ng-if="showTeamPwd")
                     label(for='team') Team Password
                     input#teamPwd.form-control(type='password'
@@ -22,6 +23,5 @@
                       placeholder='Tapez le mot de passe de la team'
                       required='')
                 hr
-                pre
-                  Model: {{selected | json}}
+                pre Model: {{selected | json}}
                 button.btn.btn-primary.btn-fw(ng-click="create(this)") Valider

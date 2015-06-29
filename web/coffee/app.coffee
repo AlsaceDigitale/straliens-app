@@ -1,7 +1,6 @@
 @App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ngWebSocket', 'ui.bootstrap']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
-        # key: 'your api key'
         v: '3.17'
         libraries: 'visualization'
     }
@@ -10,28 +9,28 @@ App.config ($stateProvider, $urlRouterProvider) ->
     $urlRouterProvider.otherwise '/play'
 
     $stateProvider
-        .state 'play',
-            url: '/play'
-            controller: 'playCtrl'
-            title: 'Accueil'
+    .state 'play',
+        url: '/play'
+        controller: 'playCtrl'
+        title: 'Accueil'
 
-        .state 'login',
-            url: '/login'
-            controller: 'loginCtrl'
-            title: 'Login'
-            templateUrl: 'partials/login.html'
+    .state 'login',
+        url: '/login'
+        controller: 'loginCtrl'
+        title: 'Login'
+        templateUrl: 'partials/login.html'
 
-        .state 'signup',
-            url: '/signup'
-            controller: 'loginCtrl'
-            title: 'SignUp'
-            templateUrl: 'partials/signup.html'
+    .state 'signup',
+        url: '/signup'
+        controller: 'loginCtrl'
+        title: 'SignUp'
+        templateUrl: 'partials/signup.html'
 
-        .state 'check',
-            url: '/check/:id'
-            controller: 'checkCtrl'
-            title: 'check'
-            templateUrl: 'partials/check.html'
+    .state 'check',
+        url: '/check/:id'
+        controller: 'checkCtrl'
+        title: 'check'
+        templateUrl: 'partials/check.html'
 
 
 # Main controller
@@ -74,9 +73,6 @@ App.controller 'playCtrl', [
                         labelAnchor: "0 0"
                         labelClass: 'map-label side-' + data.side
                     }
-                    obj.icon =
-                        #circle
-                        path: ''
                 $scope.points = data
 
         $scope.map =
@@ -88,7 +84,6 @@ App.controller 'playCtrl', [
             options:
                 minZoom: 10
                 maxZoom: 20
-                #mapTypeId: "satellite"
                 panControl: false
                 zoomControl: true
                 mapTypeControl: false
@@ -96,8 +91,6 @@ App.controller 'playCtrl', [
                 streetViewControl: false
                 overviewMapControl: false
                 mapTypeControl: false
-
-        #uiGmapGoogleMapApi.then (maps) ->
 ]
 
 App.controller 'loginCtrl', [
@@ -107,17 +100,23 @@ App.controller 'loginCtrl', [
     '$http'
     ($rootScope, $scope, $state, $http) ->
         $scope.showTeamPwd = false
-        $scope.teams = $http.get "http://localhost:3000/api/teams"
-          .success (data) ->
-            console.log data
-            data
+
+        $http.get "http://localhost:3000/api/teams"
+        .success (data) ->
+            if !data or data.length == 0
+                data = [
+                    "straliens"
+                    "humain"
+                ]
+            $scope.teams = data
 
         $scope.onSelect = ($item) ->
-          $scope.team = $item
-          $scope.showTeamPwd = true
+            $scope.team = $item
+            $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
-            $http.post "http://localhost:3000/api/users", nickname: form.mailchimp.FNAME
+            $http.post "http://localhost:3000/api/users",
+                nickname: form.mailchimp.FNAME
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
@@ -130,9 +129,9 @@ App.controller 'loginCtrl', [
 
         $scope.create = (form) ->
             $http.post "http://localhost:3000/api/users",
-              nickname: form.mailchimp.FNAME
-              email: form.mailchimp.EMAIL
-              password: form.mailchimp.PWD
+                nickname: form.mailchimp.FNAME
+                email: form.mailchimp.EMAIL
+                password: form.mailchimp.PWD
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
@@ -165,6 +164,6 @@ App.run [
             score: 0
             energy: 0
 
-        $rootScope.ws = $websocket("ws://127.0.0.1:3000/ws");
+        $rootScope.ws = $websocket "ws://127.0.0.1:8000/ws"
         # $rootScope.ws.send JSON.stringify(action: "test")
 ]
