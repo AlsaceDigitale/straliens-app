@@ -67,19 +67,19 @@ App.config ($stateProvider, $urlRouterProvider) ->
         url: '/login'
         controller: 'loginCtrl'
         title: 'Login'
-        templateUrl: 'partials/login.html'
+        templateUrl: '/partials/login.html'
 
     .state 'signup',
         url: '/signup'
         controller: 'signupCtrl'
         title: 'SignUp'
-        templateUrl: 'partials/signup.html'
+        templateUrl: '/partials/signup.html'
 
     .state 'check',
         url: '/check/:id'
         controller: 'checkCtrl'
         title: 'check'
-        templateUrl: 'partials/check.html'
+        templateUrl: '/partials/check.html'
 
 
 # Main controller
