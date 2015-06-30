@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/AlsaceDigitale/straliens-server#readme",
   "dependencies": {
+    "coffee-script": "^1.9.3",
+    "express": "^4.13.0",
     "grunt": "^0.4.5",
     "grunt-contrib-coffee": "^0.13.0",
     "grunt-contrib-jade": "^0.14.1",
