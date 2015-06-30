@@ -1,4 +1,5 @@
 serverUrl = 'http://' + if location.host == 'straliens-app.scalingo.io' or location.host == 'straliens.eu' then 'straliens.scalingo.io' else 'localhost:3000'
+wsUrl = 'ws://' + if location.host == 'straliens-app.scalingo.io' or location.host == 'straliens.eu' then 'straliens.scalingo.io' else 'localhost:3000'
 
 @App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies']
 App.config (uiGmapGoogleMapApiProvider) ->
@@ -99,7 +100,7 @@ App.controller 'checkCtrl', [
     '$state'
     ($scope, $http, $state) ->
         $http
-            url: serverUrl + "/api/point/#{$state.params.id}/check/"
+            url: serverUrl + "/api/points/#{$state.params.id}/check/"
             method: 'GET'
             withCredentials: true
 
@@ -209,7 +210,8 @@ App.controller 'loginCtrl', [
                 $rootScope.user.team = data.team
 
                 $cookies.putObject("user", $rootScope.user)
-                $rootScope.socket = io("ws://127.0.0.1:3000")
+                $rootScope.socket.disconnect()
+                $rootScope.socket = io wsUrl
 
                 $state.go 'play'
             .error (data) ->
@@ -243,11 +245,15 @@ App.controller 'signupCtrl', [
 
         $scope.create = (form) ->
             createUser = (user) ->
-                $http.post serverUrl + '/api/users?sections=team',
-                    nickname: user.nickname
-                    email: user.email
-                    password: user.password
-                    teamId: user.teamId
+                $http
+                    withCredentials: true
+                    url: serverUrl + '/api/users?sections=team',
+                    method: "POST"
+                    data:
+                        nickname: user.nickname
+                        email: user.email
+                        password: user.password
+                        teamId: user.teamId
                 .success (data) ->
                     $rootScope.user.id = data.id
                     $rootScope.user.name = data.nickname
@@ -255,7 +261,8 @@ App.controller 'signupCtrl', [
                     $rootScope.user.team = data.team
 
                     $cookies.putObject("user", $rootScope.user)
-                    $rootScope.socket = io("ws://127.0.0.1:3000")
+                    $rootScope.socket.disconnect()
+                    $rootScope.socket = io wsUrl
 
                     $state.go 'play'
                 .error (data) ->
@@ -298,6 +305,10 @@ App.run [
             teamId: -1
             score: 0
             energy: 0
+
+        $rootScope.socket = io wsUrl
+        $rootScope.socket.on 'score:update', (userScore, teamScore) ->
+            $rootScope.score = userScore
 
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
