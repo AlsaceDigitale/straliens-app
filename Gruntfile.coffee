@@ -1,9 +1,18 @@
+exec = require('child_process').exec
 module.exports = (grunt) ->
 
     grunt.loadNpmTasks 'grunt-contrib-coffee'
     grunt.loadNpmTasks 'grunt-contrib-jade'
     grunt.loadNpmTasks 'grunt-contrib-sass'
     grunt.loadNpmTasks 'grunt-contrib-watch'
+
+    grunt.registerInitTask 'resources', 'Copy resources in the build folder', ->
+        exec "cp -r web/resources web/build", (error, stdout, stderr) ->
+            grunt.log.writeln 'stdout: ' + stdout
+            grunt.log.writeln 'stderr: ' + stderr
+            if error
+                grunt.log.writeln error
+
 
     grunt.initConfig
         # COFFEE COMPILATION
@@ -16,7 +25,7 @@ module.exports = (grunt) ->
             options: style: 'compressed'
             files: [
                 cwd: 'web/sass'
-                src: '**/*.sass'
+                src: ['**/*.sass', '**/*.scss']
                 dest: 'web/build/css'
                 expand: true
                 ext: '.min.css'
@@ -46,7 +55,7 @@ module.exports = (grunt) ->
                 files: ['web/jade/**/*.jade']
                 tasks: ['jade']
             sass:
-                files: ['web/sass/**/*.sass']
+                files: ['web/sass/**/*.sass', 'web/sass/**/*.scss']
                 tasks: ['sass']
 
     # Basic tasks calling other tasks

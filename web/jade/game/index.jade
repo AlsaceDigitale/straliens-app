@@ -1,0 +1,51 @@
+html(ng-app="straliens")
+    head
+        meta(name='viewport', content='width=device-width, user-scalable=false')
+
+        title STRALIENS - The Invasion Begins
+        link(href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css', rel='stylesheet', media='all')
+        link(rel="stylesheet" href="/css/game/styles.min.css")
+
+    body(ng-controller="appCtrl")
+        .game(ng-controller="playCtrl")
+            nav.header
+                .left SCORE {{user.score}}
+                .right ENERGIE {{user.energy}}
+            section
+
+                ui-gmap-google-map(
+                center='map.center'
+                zoom='map.zoom'
+                options="map.options"
+                events="map.events")
+                    ui-gmap-markers(
+                    models="points"
+                    coords="'self'"
+                    options="'options'"
+                    icon="'icon'"
+                    labelContent="'id'")
+
+            footer
+                .wrapper
+                    .left MSG
+                    .right {{endTime}}
+                    .center {{user.team | uppercase}}
+
+        ui-view
+
+// Plugins
+script(src='/plugins/lodash/lodash.min.js')
+
+// Angular
+script(src='/plugins/angular/angular.min.js')
+script(src='/plugins/angular-google-maps/dist/angular-google-maps.min.js')
+script(src='/plugins/angular-ui-router/release/angular-ui-router.min.js')
+script(src='/plugins/angular-websocket/angular-websocket.min.js')
+script(src='/plugins/angular-cookies/angular-cookies.min.js')
+
+// Angular bootstrap-ui
+script(src='/plugins/angular-bootstrap/ui-bootstrap.min.js')
+script(src='/plugins/angular-bootstrap/ui-bootstrap-tpls.min.js')
+
+// Straliens scripting
+script(src='/js/app.js')

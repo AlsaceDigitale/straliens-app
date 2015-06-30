@@ -1,51 +1,105 @@
-html(ng-app="straliens")
-    head
-        meta(name='viewport', content='width=device-width, user-scalable=false')
-
-        title STRALIENS - The Invasion Begins
-        link(href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css', rel='stylesheet', media='all')
-        link(rel="stylesheet" href="css/styles.min.css")
-
-    body(ng-controller="appCtrl")
-        .game(ng-controller="playCtrl")
-            nav.header
-                .left SCORE {{user.score}}
-                .right ENERGIE {{user.energy}}
-            section
-
-                ui-gmap-google-map(
-                center='map.center'
-                zoom='map.zoom'
-                options="map.options"
-                events="map.events")
-                    ui-gmap-markers(
-                    models="points"
-                    coords="'coordinates'"
-                    icon="'icon'"
-                    options="'options'"
-                    labelContent="'id'")
-
-            footer
-                .wrapper
-                    .left MSG
-                    .right {{endTime}}
-                    .center {{user.team | uppercase}}
-
-        ui-view
-
-// Plugins
-script(src='/plugins/lodash/lodash.min.js')
-
-// Angular
-script(src='/plugins/angular/angular.min.js')
-script(src='/plugins/angular-google-maps/dist/angular-google-maps.min.js')
-script(src='/plugins/angular-ui-router/release/angular-ui-router.min.js')
-script(src='/plugins/angular-websocket/angular-websocket.min.js')
-script(src='/plugins/angular-cookies/angular-cookies.min.js')
-
-// Angular bootstrap-ui
-script(src='/plugins/angular-bootstrap/ui-bootstrap.min.js')
-script(src='/plugins/angular-bootstrap/ui-bootstrap-tpls.min.js')
-
-// Straliens scripting
-script(src='js/app.js')
+doctype html
+head
+    meta(charset='utf-8')
+    title Straliens Millenium
+    link(rel='icon', type='image/png', href='/resources/favicon.png')
+    link(rel='stylesheet', href='css/style.min.css')
+    link(href='http://fonts.googleapis.com/css?family=PT+Serif', rel='stylesheet', type='text/css')
+    script(src='/resources/scrollReveal.min.js')
+    script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
+    script.
+        $(window).load(function() {
+            new scrollReveal();
+        });
+.title
+    .filter
+    .logo
+        img(src='/resources/logo.png')
+        .clearfix
+        h1
+            | Straliens Millenium
+    .edgefest
+        a(href='http://edgefest.fr')
+            h1
+                | Par
+                span Alsace Digitale
+                |  pour
+            img(src='/resources/edgefest.png', alt='Edgefest')
+    h2
+        | Les
+        span 3 et 4 juillet
+        |  sauvez Strasbourg de l'invasion !
+    .join
+        label Créer votre équipe en avant-première !
+        br
+        a(href='/game/')
+            button Rejoindre le jeu
+#content.content
+    div(data-sr='vF 0.2')
+        section.story
+            .content
+                h1 « Dans Strasbourg... personne ne vous entendra crier »
+                p
+                    | En 2015, mille ans après le début de la construction de la Cathédrale, l'émetteur secret que les Straliens, une race ancienne d'extra-terrestres, avait enfoui sous Strasbourg, est prêt à fonctionner.
+                    | Leur plan machiavélique de destruction de la race humaine est sur le point d'aboutir.
+                    br
+                    br
+                    |             Votre mission en tant que terrien est de les empêcher d'activer les sources d'énergie nécessaires pour communiquer avec leur planète mère.
+                    |             Bien sûr, vous pouvez aussi choisir de vous associer avec eux, peut-être vous laisseront-ils une place de choix dans ce nouveau monde...
+        section.explain
+            .mockup
+                img(src='/resources/mockup.png')
+            .content
+                h1 Déroulement du jeu
+                p
+                    | En fonction de votre camp, votre mission est de désactiver ou de réparer des générateurs d’énergie répartis sur tout le centre ville de Strasbourg.
+                    | Une partie dure 3h, vous pouvez prendre une partie en cours de route et la quitter toute aussi facilement.
+                    br
+                    br
+                    |             Chaque joueur appartient à une équipe (constituées de 1 à 10 joueurs), équipe qui appartient à un camp : Terriens ou Straliens.
+                    |             Au fur et à mesure de la partie vous gagnez de l'énergie qui vous permet de désactiver ou réparer les générateurs d'énergie.
+    section.citation(data-sr='vF 0.2')
+        h1 "Je croyais vraiment que je les avais tous explosés."
+        p
+            span Ellen Ripley
+            | , Warrant Officer, Nostromo Ship
+    .clearfix
+    section.lastform(data-sr='vF 0.2')
+        .join
+            label Créer votre équipe en avant-première !
+            br
+            a(href='/game/')
+                button Rejoindre le jeu
+footer
+    .realisation(data-sr='vF 0.2')
+        h1 Réalisation
+        .hs
+            a(href='https://www.facebook.com/groups/402624123157676/')
+                img(src='/resources/logo_hs.png')
+                h2 HackSXB
+        .ad
+            a(href='http://alsacedigitale.org')
+                img(src='/resources/logo_ad.png')
+                h2 Alsace Digitale
+        h2
+            | Pour participer au projet Straliens
+            br
+            a(href='mailto:hacksxb@alsacedigitale.org') hacksxb@alsacedigitale.org
+    .partenaires(data-sr='vF 0.2')
+        h1 Partenaires
+        .orange
+            a(href='http://orange.fr')
+                img(src='/resources/logo_orange.jpg')
+                h2 Orange
+        .scalingo
+            a(href='https://scalingo.com')
+                img(src='/resources/logo_scalingo.png')
+                h2 Scalingo
+        .ugc
+            a(href='http://ugc.fr')
+                img(src='/resources/logo_ugc.png')
+                h2 UGC
+        .ce
+            a(href='http://www.caisse-epargne.fr')
+                img(src='/resources/logo_ce.jpg')
+                h2 Caisse d'épargne
