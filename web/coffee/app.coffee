@@ -93,9 +93,16 @@ App.controller 'appCtrl', [
 # ---------------
 App.controller 'checkCtrl', [
     '$scope'
+    '$http'
     '$state'
-    ($scope, $state) ->
-        $scope.test = $state.params.id
+    ($scope, $http, $state) ->
+        $http
+            url: 'http://localhost:3000/api/point/#{$state.params.id}/check/'
+            method: 'GET'
+            withCredentials: true
+
+        .success (data) ->
+            $state.go 'play'
 ]
 
 # Index page controller
@@ -111,9 +118,8 @@ App.controller 'playCtrl', [
         if !$rootScope.validUser()
             $state.go 'login'
 
-        
-        $rootScope.socket.on 'notification:post', (msg, obj) ->
-            console.log msg, obj
+        #$rootScope.socket.on 'notification:post', (msg, obj) ->
+        #    console.log msg, obj
 
 #        $http.get "http://localhost:3000/api/points"
 #        .success (data) ->
@@ -441,9 +447,13 @@ App.controller 'loginCtrl', [
             $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
-            $http.post "http://localhost:3000/api/services/login?sections=team",
-                nickname: form.nickname
-                password: form.password
+            $http
+                withCredentials: true
+                url: "http://localhost:3000/api/services/login?sections=team",
+                method: "POST"
+                data:
+                    nickname: form.nickname
+                    password: form.password
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
@@ -451,6 +461,7 @@ App.controller 'loginCtrl', [
                 $rootScope.user.team = data.team
 
                 $cookies.putObject("user", $rootScope.user)
+                $rootScope.socket = io("ws://127.0.0.1:3000")
 
                 $state.go 'play'
             .error (data) ->
@@ -489,6 +500,7 @@ App.controller 'signupCtrl', [
                 $rootScope.user.team = data.team
 
                 $cookies.putObject("user", $rootScope.user)
+                $rootScope.socket = io("ws://127.0.0.1:3000")
 
                 $state.go 'play'
             .error (data) ->
@@ -520,6 +532,4 @@ App.run [
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
             return !!$rootScope.user.name
-
-        $rootScope.socket = io("ws://127.0.0.1:3000")
 ]
