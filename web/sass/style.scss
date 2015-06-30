@@ -44,6 +44,30 @@ a {
 body {
   background: $grey;
 }
+
+table {
+  margin: auto;
+  border-collapse: collapse;
+  margin-top: 40px;
+  margin-bottom: 50px;
+
+  td, th { 
+    padding: 6px; 
+    border: 2px solid $black; 
+    text-align: center;
+    font-size: 25px;
+    padding: 15px 30px;
+  }
+  th { 
+    background: $black; 
+    color: $green; 
+    font-weight: bold; 
+  }
+  td {
+    color: $white;
+  }
+}
+
 @import 'title';
 @import 'form';
 @import 'content';
