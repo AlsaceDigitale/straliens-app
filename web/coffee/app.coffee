@@ -111,6 +111,10 @@ App.controller 'playCtrl', [
         if !$rootScope.validUser()
             $state.go 'login'
 
+        
+        $rootScope.socket.on 'notification:post', (msg, obj) ->
+            console.log msg, obj
+
 #        $http.get "http://localhost:3000/api/points"
 #        .success (data) ->
 #            data.forEach (obj, key) ->
@@ -517,6 +521,5 @@ App.run [
             # TODO : check with token/whatever
             return !!$rootScope.user.name
 
-        $rootScope.ws = $websocket "ws://127.0.0.1:8000/ws"
-        # $rootScope.ws.send JSON.stringify(action: "test")
+        $rootScope.socket = io("ws://127.0.0.1:3000")
 ]
