@@ -61,7 +61,7 @@ module.exports = (grunt) ->
     # Basic tasks calling other tasks
     # -------------------------------
 
-    grunt.registerTask 'default', ['jade', 'sass', 'coffee']
+    grunt.registerTask 'default', ['jade', 'sass', 'coffee', 'resources']
 
 
     # More complex tasks
