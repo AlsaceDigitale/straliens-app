@@ -1,3 +1,5 @@
+serverUrl = 'http://' + if location.host == 'straliens-app.scalingo.io' then 'straliens.scalingo.io' else 'localhost:3000'
+
 @App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ngWebSocket', 'ui.bootstrap', 'ngCookies']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
@@ -111,10 +113,10 @@ App.controller 'playCtrl', [
         if !$rootScope.validUser()
             $state.go 'login'
 
-#        $http.get "http://localhost:3000/api/points"
+#        $http.get serverUrl + "/api/points"
 #        .success (data) ->
 #            data.forEach (obj, key) ->
-#                $http.get "http://localhost:3000/api/points/"+ obj.id
+#                $http.get serverUrl + "/api/points/"+ obj.id
 #                .success (data) ->
 #                    obj.coordinates = { latitude: obj.lat, longitude: obj.lng }
 #                    obj.options = {
@@ -437,7 +439,7 @@ App.controller 'loginCtrl', [
             $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
-            $http.post "http://localhost:3000/api/services/login?sections=team",
+            $http.post serverUrl + "/api/services/login?sections=team",
                 nickname: form.nickname
                 password: form.password
             .success (data) ->
@@ -464,7 +466,7 @@ App.controller 'signupCtrl', [
     ($rootScope, $scope, $state, $http, $cookies) ->
         $scope.showTeamPwd = false
 
-        $http.get "http://localhost:3000/api/teams"
+        $http.get serverUrl + "/api/teams"
         .success (data) ->
             if !data or data.length == 0
                 data = [
@@ -474,7 +476,7 @@ App.controller 'signupCtrl', [
             $scope.teams = data
 
         $scope.create = (form) ->
-            $http.post 'http://localhost:3000/api/users?sections=team',
+            $http.post serverUrl + '/api/users?sections=team',
                 nickname: form.nickname
                 email: form.email
                 password: form.password
@@ -517,6 +519,6 @@ App.run [
             # TODO : check with token/whatever
             return !!$rootScope.user.name
 
-        $rootScope.ws = $websocket "ws://127.0.0.1:8000/ws"
+        # $rootScope.ws = $websocket "ws://127.0.0.1:8000/ws"
         # $rootScope.ws.send JSON.stringify(action: "test")
 ]
