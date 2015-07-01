@@ -1,5 +1,5 @@
-serverUrl = 'http://' + if location.host == 'straliens-app.scalingo.io' or location.host == 'straliens.eu' then 'straliens.scalingo.io' else 'localhost:3000'
-wsUrl = 'ws://' + if location.host == 'straliens-app.scalingo.io' or location.host == 'straliens.eu' then 'straliens.scalingo.io' else 'localhost:3000'
+serverUrl = 'http://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
+wsUrl = 'ws://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 
 @App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies']
 App.config (uiGmapGoogleMapApiProvider) ->
@@ -85,6 +85,13 @@ App.config ($stateProvider, $urlRouterProvider) ->
         templateUrl: '/partials/check.html'
 
 
+    .state 'nogame',
+        url: '/nogame'
+        controller: 'nogameCtrl'
+        title: 'no game'
+        templateUrl: '/partials/nogame.html'
+
+
 # Main controller
 # ---------------
 App.controller 'appCtrl', [
@@ -119,26 +126,33 @@ App.controller 'playCtrl', [
     '$state'
     'uiGmapGoogleMapApi'
     ($rootScope, $scope, $http, $state, uiGmapGoogleMapApi) ->
+        $rootScope.points = {}
 
         if !$rootScope.validUser()
             $state.go 'login'
-
-        $http.get serverUrl + "/api/points"
-        .success (data) ->
-            $scope.points = data
-            $scope.points.forEach (point) ->
-                $http.get serverUrl + "/api/points/"+ point.id
+        else
+            $http.get serverUrl + '/api/games/current'
+            .success (data) ->
+                $http.get serverUrl + "/api/points"
                 .success (data) ->
-                    point.coordinates = { latitude: point.lat, longitude: point.lng }
-                    point.options = {
-                        labelContent: Math.abs(data.energy) || '0'
-                        labelAnchor: "0 0"
-                        labelClass: 'map-label side-' + data.side
-                    }
-                    point.icon =
-                        path: ''
-                    point.data = data
-                    console.log point, data
+                    $scope.points = data
+                    $scope.points.forEach (point) ->
+                        $http.get serverUrl + "/api/points/"+ point.id
+                        .success (data) ->
+                            point.coordinates = { latitude: point.lat, longitude: point.lng }
+                            point.options = {
+                                labelContent: Math.abs(data.energy) || '0'
+                                labelAnchor: "0 0"
+                                labelClass: 'map-label side-' + data.side
+                            }
+                            point.icon =
+                                path: ''
+                            point.data = data
+            .error (data) ->
+                $state.go 'nogame'
+
+        if !$rootScope.validUser()
+            $state.go 'login'
 
         $scope.map =
             zoom: 15
@@ -255,6 +269,7 @@ App.controller 'signupCtrl', [
                         nickname: user.nickname
                         email: user.email
                         password: user.password
+                        teamPassword: user.teamPassword
                         teamId: user.teamId
                 .success (data) ->
                     $rootScope.user.id = data.id
@@ -275,17 +290,45 @@ App.controller 'signupCtrl', [
                 $http.post serverUrl + '/api/teams',
                     name: $scope.resultTeam.name
                     slogan: $scope.resultTeam.slogan
-                    password: $scope.resultTeam.pwd
+                    password: $scope.resultTeam.password
                 .success (team) ->
-                    console.log team
+                    $scope.team = ->
+                        return team
+
                     user =
-                        nickname: form.nickname
-                        email: form.email
-                        password: form.password
+                        nickname: form.nickname.$viewValue
+                        email: form.email.$viewValue
+                        password: form.password.$viewValue
+                        teamPassword: form.teamPassword.$viewValue
                         teamId: team.id
                     createUser(user)
                 .error (data) ->
                     console.log data
+            else
+                user =
+                    nickname: form.nickname.$viewValue
+                    email: form.email.$viewValue
+                    password: form.password.$viewValue
+                    teamPassword: form.teamPassword.$viewValue
+                    teamId: $scope.team().id
+                createUser(user)
+]
+
+App.controller 'nogameCtrl', [
+    '$rootScope'
+    '$scope'
+    '$state'
+    '$http'
+    '$cookies'
+    ($rootScope, $scope, $state, $http, $cookies) ->
+        $http.get serverUrl + '/api/games'
+        .success (games) ->
+            $scope.games = games
+            $scope.games.forEach (game) ->
+                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM à HH:mm"
+                game.endDate = moment(new Date(game.endTime)).format "HH:mm"
+        .error (data) ->
+            console.log data
 ]
 
 # RUN !!
