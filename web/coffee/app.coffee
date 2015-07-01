@@ -227,6 +227,8 @@ App.controller 'loginCtrl', [
                 $rootScope.user.teamId = data.teamId
                 $rootScope.user.team = data.team
 
+                $rootScope.updateVitals()
+
                 localStorage.user = JSON.stringify $rootScope.user
 
                 $rootScope.socket.disconnect()
@@ -283,6 +285,8 @@ App.controller 'signupCtrl', [
                     $rootScope.user.team = data.team
 
                     localStorage.user = JSON.stringify $rootScope.user
+
+                    $rootScope.updateVitals()
 
                     $rootScope.socket.disconnect()
                     $rootScope.socket = io wsUrl
@@ -366,12 +370,25 @@ App.run [
 
         $rootScope.socket = io wsUrl
         $rootScope.socket.on 'score:update', (userScore, teamScore) ->
+            console.log userScore
             $rootScope.user.score = userScore
 
         $rootScope.socket.on 'user:update', (data) ->
+            console.log data.energy
             if data.energy then $rootScope.user.energy = data.energy
 
-        $rootScope.validUser = () ->
+        $rootScope.validUser = ->
             # TODO : check with token/whatever
             return localStorage.user
+
+        $rootScope.updateVitals = ->
+            $http
+                withCredentials: true
+                url: serverUrl + "/api/users/me",
+                method: "GET"
+            .success (data) ->
+                if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
+                if data.gameUser.score then $rootScope.user.score = data.gameUser.score
+
+        $rootScope.updateVitals()
 ]
