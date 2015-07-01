@@ -231,8 +231,8 @@ App.controller 'loginCtrl', [
 
                 $state.go 'play'
             .error (data) ->
-                # TODO: make something with the error
-                console.log data
+                if data.type == 'AuthenticationError'
+                    $scope.error = true
 ]
 
 
@@ -284,7 +284,7 @@ App.controller 'signupCtrl', [
                     $state.go 'play'
                 .error (data) ->
                     data.fields.forEach (err) ->
-                        $scope.errors[err.path] = true
+                        $scope.errors[err.path] = err.message
 
             if !$scope.team()
                 $http.post serverUrl + '/api/teams',
@@ -346,7 +346,10 @@ App.run [
         # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
 
-        $rootScope.user = if $cookies.getObject('user') then $cookies.getObject('user') else
+        #if $cookies.get('user')
+
+
+        $rootScope.user =
             team: null
             teamId: -1
             score: 0
@@ -354,7 +357,11 @@ App.run [
 
         $rootScope.socket = io wsUrl
         $rootScope.socket.on 'score:update', (userScore, teamScore) ->
-            $rootScope.score = userScore
+            console.log userScore, teamScore
+            $rootScope.user.score = userScore
+
+        $rootScope.socket.on 'user:update', (data, test) ->
+            console.log data, test
 
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
