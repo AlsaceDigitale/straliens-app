@@ -241,9 +241,9 @@ App.controller 'signupCtrl', [
     '$http'
     '$cookies'
     ($rootScope, $scope, $state, $http, $cookies) ->
-        $scope.showTeamPwd = false
-
         $scope.teams = []
+
+        $scope.errors = {}
 
         $scope.resultTeam =
             name: ''
@@ -255,7 +255,7 @@ App.controller 'signupCtrl', [
             $scope.teams = data
 
         $scope.team = ->
-            return team for team in $scope.teams when team.name.toLowerCase() == $scope.resultTeam.name.toLowerCase()
+            return team for team in $scope.teams when team.name.toLowerCase() == ($scope.resultTeam.name || '').toLowerCase()
 
         $scope.create = (form) ->
             createUser = (user) ->
@@ -281,8 +281,8 @@ App.controller 'signupCtrl', [
 
                     $state.go 'play'
                 .error (data) ->
-                    # TODO: make something with the error
-                    console.log data
+                    data.fields.forEach (err) ->
+                        $scope.errors[err.path] = true
 
             if !$scope.team()
                 $http.post serverUrl + '/api/teams',
@@ -301,7 +301,8 @@ App.controller 'signupCtrl', [
                         teamId: team.id
                     createUser(user)
                 .error (data) ->
-                    console.log data
+                    # TODO
+
             else
                 user =
                     nickname: form.nickname.$viewValue
