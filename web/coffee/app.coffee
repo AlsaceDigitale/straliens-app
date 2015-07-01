@@ -227,9 +227,9 @@ App.controller 'loginCtrl', [
                 $rootScope.user.teamId = data.teamId
                 $rootScope.user.team = data.team
 
-                $rootScope.updateVitals()
-
                 localStorage.user = JSON.stringify $rootScope.user
+
+                $rootScope.updateVitals()
 
                 $rootScope.socket.disconnect()
                 $rootScope.socket = io wsUrl
@@ -335,7 +335,7 @@ App.controller 'nogameCtrl', [
         .success (games) ->
             $scope.games = games
             $scope.games.forEach (game) ->
-                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
+                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM à HH:mm"
                 game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
             console.log data
@@ -370,17 +370,15 @@ App.run [
 
         $rootScope.socket = io wsUrl
         $rootScope.socket.on 'score:update', (userScore, teamScore) ->
-            console.log userScore
             $rootScope.user.score = userScore
 
         $rootScope.socket.on 'user:update', (data) ->
-            console.log data.energy
             if data.energy then $rootScope.user.energy = data.energy
 
-        $rootScope.validUser = ->
+        $rootScope.validUser = () ->
             # TODO : check with token/whatever
             return localStorage.user
-
+        
         $rootScope.updateVitals = ->
             $http
                 withCredentials: true
