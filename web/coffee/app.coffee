@@ -364,7 +364,8 @@ App.run [
     '$state'
     '$window'
     '$http'
-    ($rootScope, $state, $window, $http) ->
+    'notify'
+    ($rootScope, $state, $window, $http, notify) ->
         $rootScope.$state = $state
 
         $rootScope.endTime = '00H00'
@@ -387,6 +388,9 @@ App.run [
         $rootScope.socket = io wsUrl
         $rootScope.socket.on 'score:update', (userScore, teamScore) ->
             $rootScope.user.score = userScore
+
+        $rootScope.socket.on 'notification:send', (data) ->
+            notify "Hello there "+data
 
         $rootScope.socket.on 'user:update', (data) ->
             if data.energy then $rootScope.user.energy = data.energy
