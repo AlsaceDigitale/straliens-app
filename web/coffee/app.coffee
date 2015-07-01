@@ -117,6 +117,179 @@ App.controller 'checkCtrl', [
             $state.go 'login'
 ]
 
+App.directive 'ngqrcode', ->
+    return {
+        restrict: 'E',
+        template: '<button ng-click="start()" class="btn btn-danger btn-fab btn-raised">
+                    <i class="fa fa-video-camera"></i>
+                    <button>
+                    <button ng-click="stop()" disabled class="btn btn-primary btn-fab btn-raised hide">
+                        <i class="fa fa-stop"></i>
+                    </button><div id="video-screen" class="video-screen">{{video}}</div>',
+        controller: ['$scope', '$http', ($scope, $http) ->
+            video = undefined
+            multiStreamRecorder = undefined
+            audioVideoBlobs = {}
+            recordingInterval = 0
+            timeInterval = 6000
+            intervalCD = timeInterval / 1000
+            secondCount = 4
+
+            # stop l'enregistrement
+            stopRecord = ->
+                multiStreamRecorder.stop()
+                if multiStreamRecorder.stream
+                    multiStreamRecorder.stream.stop()
+                secondCount = 4
+                (container).find('video').remove()
+                videoIsStop = true
+                clearInterval timer
+                clearInterval counter
+                timeInterval = 6000
+                intervalCD = timeInterval / 1000
+                return
+
+            # affiche la video au click + activation
+
+            startVideoView = (cstream) ->
+                stream = cstream
+                video = document.createElement('video')
+                video = mergeProps(video,
+                    controls: false
+                    muted: true
+                    src: URL.createObjectURL(stream))
+                video.width = resolution_x
+                video.height = resolution_y
+                video.play()
+                container.appendChild video
+                launchCountDown()
+                return
+
+            # loadingbar + enregistrement
+
+            startRecord = ->
+                videoIsStop = false
+                counter = setInterval(timeintervalCountDown, 1000)
+                onMediaSuccess()
+                i = 0
+                timer = setInterval((->
+                    i++
+                    width = Math.round(100 / (timeInterval / 1000) * i)
+                    return
+                ), 1000)
+                setTimeout (->
+                    video.disabled = true
+                    multiStreamRecorder.stop()
+                    clearInterval timer
+                    if multiStreamRecorder.stream
+                        multiStreamRecorder.stream.stop()
+                    return
+                ), timeInterval
+                return
+
+            timeintervalCountDown = ->
+                if intervalCD <= 0
+                    clearInterval counter
+                    return
+                intervalCD--
+                return
+
+            confirmeAndSend = ->
+                location.href = '/'
+                return
+
+            uploadVideo = (blob) ->
+                console.log blob
+                return
+
+            onMediaSuccess = ->
+
+                appendLink = (blob) ->
+                    a = document.createElement('a')
+                    a.target = '_blank'
+                    a.innerHTML = 'Open Recorded ' + (if blob.type == 'audio/ogg' then 'Audio' else 'Video') + ' No. ' + index++ + ' (Size: ' + bytesToSize(blob.size) + ') Time Length: ' + getTimeLength(timeInterval)
+                    a.href = URL.createObjectURL(blob)
+                    return
+
+                multiStreamRecorder = new MultiStreamRecorder(stream)
+                multiStreamRecorder.canvas =
+                    width: video.width
+                    height: video.height
+                multiStreamRecorder.video = video
+
+                multiStreamRecorder.ondataavailable = (blobs) ->
+                    if !videoIsStop
+                        uploadVideo blobs.video
+                    # ConcatenateBlobs([blobs.video,blobs.audio], 'video/webm', function(resultingBlob) {
+                    #   // or preview locally
+                    #   //localVideo.src = URL.createObjectURL(resultingBlob);
+                    #   console.log(resultingBlob);
+                    # });
+                    #uploadVideo(blobs.video);
+                    #uploadAudio(blobs.audio);
+                    # appendLink(blobs.audio);
+                    # appendLink(blobs.video);
+                    return
+
+                # get blob after specific time interval
+                multiStreamRecorder.start timeInterval
+                return
+
+            onMediaError = (e) ->
+                console.log 'media error', e
+                return
+
+            # below function via: http://goo.gl/B3ae8c
+
+            bytesToSize = (bytes) ->
+                k = 1000
+                sizes = [
+                    'Bytes'
+                    'KB'
+                    'MB'
+                    'GB'
+                    'TB'
+                ]
+                if bytes == 0
+                    return '0 Bytes'
+                i = parseInt(Math.floor(Math.log(bytes) / Math.log(k)), 10)
+                (bytes / k ** i).toPrecision(3) + ' ' + sizes[i]
+
+            getTimeLength = (milliseconds) ->
+                data = new Date(milliseconds)
+                data.getUTCHours() + ' hours, ' + data.getUTCMinutes() + ' minutes and ' + data.getUTCSeconds() + ' second(s)'
+
+            navigator.getUserMedia = navigator.getUserMedia or navigator.webkitGetUserMedia or navigator.mozGetUserMedia or navigator.msGetUserMedia
+            resolution_x = 50
+            resolution_y = 50
+            mediaConstraints = 
+                audio: true
+                video: mandatory:
+                    maxWidth: resolution_x
+                    maxHeight: resolution_y
+            container = document.getElementById('video-screen')
+            index = 1
+            stream = undefined
+            videoIsStop = false
+            xhrUpload = undefined
+            timer = undefined
+            counter = undefined
+            $scope.start = ->
+                if navigator.getUserMedia
+                    navigator.getUserMedia mediaConstraints, startVideoView, onMediaError
+                return
+            $scope.stop = ->
+                videoIsStop = true
+                stopRecord()
+                return
+
+            window.onbeforeunload = ->
+                document.querySelector('#start-recording').disabled = false
+                return
+        ]
+    }
+
+
 # Index page controller
 # ---------------------
 App.controller 'playCtrl', [
