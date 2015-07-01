@@ -9,21 +9,21 @@ html(ng-app="straliens")
     body(ng-controller="appCtrl")
         .game(ng-controller="playCtrl")
             nav.header
-                .left SCORE {{user.score}}
+                .left SCORE {{user.score}}  {{$scope.markers}}
                 .right ENERGIE {{user.energy}}
             section
 
                 ui-gmap-google-map(
-                center='map.center'
-                zoom='map.zoom'
-                options="map.options"
-                events="map.events")
+                    center='map.center'
+                    zoom='map.zoom'
+                    options="map.options"
+                    events="map.events")
                     ui-gmap-markers(
-                    models="points"
-                    coords="'coordinates'"
-                    options="'options'"
-                    icon="'icon'"
-                    labelContent="'name'")
+                        models="points"
+                        coords="'coordinates'"
+                        options="'options'"
+                        icon="'icon'"
+                        control="markers")
 
             footer
                 .wrapper

@@ -124,10 +124,8 @@ App.controller 'playCtrl', [
     '$scope'
     '$http'
     '$state'
-    'uiGmapGoogleMapApi'
-    ($rootScope, $scope, $http, $state, uiGmapGoogleMapApi) ->
-        $rootScope.points = {}
-
+    'uiGmapIsReady'
+    ($rootScope, $scope, $http, $state, uiGmapIsReady) ->
         if !$rootScope.validUser()
             $state.go 'login'
 
@@ -135,14 +133,14 @@ App.controller 'playCtrl', [
         .success (data) ->
             $http.get serverUrl + "/api/points"
             .success (data) ->
-                $scope.points = data
-                $scope.points.forEach (point) ->
+                $rootScope.points = data
+                $rootScope.points.forEach (point) ->
                     $http.get serverUrl + "/api/points/"+ point.id
                     .success (data) ->
                         point.coordinates = { latitude: point.lat, longitude: point.lng }
                         point.options = {
-                            labelContent: Math.abs(data.energy) || '0'
                             labelAnchor: "0 0"
+                            labelContent: Math.abs(data.energy) || '0'
                             labelClass: 'map-label side-' + data.side
                         }
                         point.icon =
@@ -153,6 +151,8 @@ App.controller 'playCtrl', [
 
         if !$rootScope.validUser()
             $state.go 'login'
+
+        $scope.markers = {}
 
         $scope.map =
             zoom: 15
@@ -170,6 +170,7 @@ App.controller 'playCtrl', [
                 streetViewControl: false
                 overviewMapControl: false
                 mapTypeControl: false
+            control: {}
             events:
                 center_changed: (map) ->
                     allowedBounds =
@@ -195,6 +196,27 @@ App.controller 'playCtrl', [
                             Y = AmaxY
 
                         map.panTo {lat: Y, lng: X}
+
+        if $rootScope.ioSet
+            $rootScope.ioSet = false
+            uiGmapIsReady.promise().then (maps) ->
+                $rootScope.socket = io wsUrl
+                $rootScope.socket.on 'score:update', (userScore, teamScore) ->
+                    $rootScope.user.score = userScore
+                    $rootScope.$apply()
+
+                $rootScope.socket.on 'point:update', (data) ->
+                    $rootScope.points.forEach (point) ->
+                        if point.id == data.point.id
+                            point.options = {
+                                labelContent: Math.abs(data.gamePoint.energy) || '0'
+                                labelClass: 'map-label side-' + data.gamePoint.side
+                            }
+                            point.data = data.gamePoint
+
+                $rootScope.socket.on 'user:update', (data) ->
+                    if data.energy then $rootScope.user.energy = data.energy
+                    $rootScope.$apply()
 ]
 
 App.controller 'loginCtrl', [
@@ -237,7 +259,6 @@ App.controller 'loginCtrl', [
                 if data.type == 'AuthenticationError'
                     $scope.error = true
 ]
-
 
 App.controller 'signupCtrl', [
     '$rootScope'
@@ -347,7 +368,10 @@ App.run [
     ($rootScope, $state, $window, $http) ->
         $rootScope.$state = $state
 
+        $rootScope.ioSet = true
+
         $rootScope.endTime = '00H00'
+        $rootScope.points = {}
 
         $http
             withCredentials: true
@@ -356,6 +380,8 @@ App.run [
             if status == true
                 if localStorage.user
                     $rootScope.user = JSON.parse localStorage.user
+            else
+                delete localStorage.user
 
         $rootScope.user =
             team: null
@@ -364,12 +390,6 @@ App.run [
             energy: 0
             id: null
 
-        $rootScope.socket = io wsUrl
-        $rootScope.socket.on 'score:update', (userScore, teamScore) ->
-            $rootScope.user.score = userScore
-
-        $rootScope.socket.on 'user:update', (data) ->
-            if data.energy then $rootScope.user.energy = data.energy
 
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
