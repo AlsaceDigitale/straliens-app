@@ -5,5 +5,4 @@
             div(ng-if="games")
                 h2 Prochaines parties:
                 h3(ng-repeat="game in games") {{game.startDate}}
-                    small  jusqu'à
-                    |  {{game.endDate}}
+                    | - {{game.endDate}}
