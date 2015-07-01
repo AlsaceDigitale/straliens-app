@@ -331,7 +331,7 @@ App.controller 'nogameCtrl', [
         .success (games) ->
             $scope.games = games
             $scope.games.forEach (game) ->
-                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM à HH:mm"
+                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
                 game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
             console.log data
