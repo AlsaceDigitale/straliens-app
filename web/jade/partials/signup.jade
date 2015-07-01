@@ -1,10 +1,10 @@
 .overlay
     .login
         .wrapper.col-xs-12.col-sm-6.col-sm-offset-3
-            form
+            form(name="signupForm")
                 .form-group
-                    label(for='firstname') Nom d'utilisateur
-                    input#firstname.form-control(type='text', name='fname', ng-model='nickname', placeholder='Nom d\'utilisateur')
+                    label(for='nickname') Nom d'utilisateur
+                    input#firstname.form-control(type='text', name='nickname', ng-model='nickname', placeholder='Nom d\'utilisateur')
                 .form-group
                     label(for='email') Email
                     input#email.form-control(type='email', name='email', ng-model='email', placeholder='Tapez votre addresse email', required='', pattern="[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*")
@@ -12,19 +12,22 @@
                     label(for='password') Password
                     input#password.form-control(type='password', name='password', ng-model='password', placeholder='Tapez votre mot de passe', required='')
                 .form-group
-                    label Choix de la Team (optionnel)
+                    label(for="teamName") Choix de la Team
                     input.form-control(
                         type='text',
+                        name="teamName"
                         ng-model='resultTeam.name',
                         typeahead='team.name for team in teams | filter:$viewValue '
-                        typeahead-loading='loadingTeams')
+                        typeahead-loading='loadingTeams'
+                        placeholder='Tapez le nom d votre équipe (même si vous jouez seul)'
+                        required='')
                     i.glyphicon.glyphicon-refresh(ng-show="loadingTeams")
                 .form-group(ng-if="resultTeam.name")
-                    label(for='teamPwd') {{!team() ? 'Créer le m' : 'M'}}ot de passe de l'équipe
+                    label(for='teamPassword') {{!team() ? 'Créer le m' : 'M'}}ot de passe de l'équipe
                     input.form-control(
-                        type='password'
-                        ng-model="resultTeam.pwd"
-                        name='teamPwd'
+                        type='text'
+                        ng-model="resultTeam.password"
+                        name='teamPassword'
                         placeholder='Tapez le mot de passe de la team'
                         required='')
                 .form-group(ng-if="resultTeam.name && !team()")
@@ -33,7 +36,6 @@
                         type='text'
                         name='teamSlogan'
                         placeholder='Tapez le slogan de la team'
-                        required=''
                         ng-model="resultTeam.slogan")
                 .form-group(ng-if="team()")
                     label(for='teamSlogan') Slogan de l'équipe
@@ -41,8 +43,7 @@
                         type='text'
                         name='teamSlogan'
                         placeholder='Tapez le slogan de la team'
-                        required=''
                         ng-model="team().slogan"
                         disabled)
                 hr
-                button.btn.btn-primary.btn-fw(ng-click="create(this)") Valider
+                button.btn.btn-primary.btn-fw(ng-click="create(signupForm)" ng-disabled="signupForm.$invalid") Valider
