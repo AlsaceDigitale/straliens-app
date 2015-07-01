@@ -106,6 +106,8 @@ App.controller 'checkCtrl', [
 
         .success (data) ->
             $state.go 'play'
+        .error (data) ->
+            $state.go 'login'
 ]
 
 # Index page controller
