@@ -1,4 +1,4 @@
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ngWebSocket', 'ui.bootstrap', 'ngCookies']
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies', 'cgNotify']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         v: '3.17'
@@ -98,6 +98,21 @@ App.controller 'checkCtrl', [
         $scope.test = $state.params.id
 ]
 
+# Notify controller
+# -----------------
+
+
+
+App.controller 'notifCtrl', [
+    '$scope'
+    'notify'
+
+    ($scope, notify) ->
+        notify.config {startTop : 0, maximumOpen: 3, templateUrl: "/resources/angular-notify-custom.html"}    
+        $scope.shownotify = ->
+            notify "Hello there" 
+]
+    
 # Index page controller
 # ---------------------
 App.controller 'playCtrl', [
@@ -502,9 +517,8 @@ App.run [
     '$rootScope'
     '$state'
     '$window'
-    '$websocket'
     '$cookies'
-    ($rootScope, $state, $window, $websocket, $cookies) ->
+    ($rootScope, $state, $window, $cookies) ->
         $rootScope.$state = $state
         $rootScope.$cookies = $cookies
 
