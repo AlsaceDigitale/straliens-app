@@ -3,23 +3,23 @@
         .wrapper.col-xs-12.col-sm-6.col-sm-offset-3
             form(name="signupForm")
                 .form-group
-                    label(for='nickname') Nom d'utilisateur
-                    input#firstname.form-control(type='text', name='nickname', ng-model='nickname', placeholder='Nom d\'utilisateur')
+                    label(for='nickname') Pseuso
+                    input#firstname.form-control(type='text', name='nickname', ng-model='nickname', placeholder='Pseudo')
                 .form-group
                     label(for='email') Email
-                    input#email.form-control(type='email', name='email', ng-model='email', placeholder='Tapez votre addresse email', required='', pattern="[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*")
+                    input#email.form-control(type='email', name='email', ng-model='email', placeholder='Email', required='', pattern="[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*")
                 .form-group
-                    label(for='password') Password
-                    input#password.form-control(type='password', name='password', ng-model='password', placeholder='Tapez votre mot de passe', required='')
+                    label(for='password') Mot de passe
+                    input#password.form-control(type='password', name='password', ng-model='password', placeholder='Mot de passe', required='')
                 .form-group
-                    label(for="teamName") Choix de la Team
+                    label(for="teamName") Création ou choix de l'équipe
                     input.form-control(
                         type='text',
                         name="teamName"
                         ng-model='resultTeam.name',
                         typeahead='team.name for team in teams | filter:$viewValue '
                         typeahead-loading='loadingTeams'
-                        placeholder='Tapez le nom d votre équipe (même si vous jouez seul)'
+                        placeholder='Nom de l\'équipe'
                         required='')
                     i.glyphicon.glyphicon-refresh(ng-show="loadingTeams")
                 .form-group(ng-if="resultTeam.name")
