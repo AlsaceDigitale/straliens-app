@@ -8,6 +8,7 @@
     "angular-google-maps": "~2.1.4",
     "angular-cookies": "~1.4.1",
     "angular-notify": "~2.5.0"
+    "moment": "~2.10.3"
   },
   "devDependencies": {
     "angular-bootstrap": "~0.13.0"

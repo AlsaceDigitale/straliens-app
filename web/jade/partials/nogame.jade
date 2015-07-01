@@ -1,0 +1,8 @@
+.overlay
+    .nogame
+        .wrapper.col-xs-12.col-sm-6.col-sm-offset-3
+            h1.center Il n'y a pas de partie en cours
+            div(ng-if="games")
+                h2 Prochaines parties:
+                h3(ng-repeat="game in games") {{game.startDate}}
+                    | - {{game.endDate}}

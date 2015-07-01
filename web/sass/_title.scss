@@ -65,8 +65,7 @@
     text-align: center;
     color: $white;
     font-size: 30px;
-    margin-top: 50px;
-    margin-bottom: 60px;
+    margin-top: 30px;
     span {
       color: $green;
       background: rgba(black, 0.6);
@@ -76,6 +75,14 @@
   .join {
     display: inline-block;
     margin-bottom: 40px;
-    padding: 30px;
+    button {
+      background: $green;
+      color: $black;
+      border: 7px $green solid;
+      &:hover {
+        background: $black;
+        color: $green;
+      }
+    }
   }
 }

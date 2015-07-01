@@ -1,4 +1,8 @@
 @App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies', 'cgNotify']
+serverUrl = 'http://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
+wsUrl = 'ws://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
+
+
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         v: '3.17'
@@ -82,6 +86,13 @@ App.config ($stateProvider, $urlRouterProvider) ->
         templateUrl: '/partials/check.html'
 
 
+    .state 'nogame',
+        url: '/nogame'
+        controller: 'nogameCtrl'
+        title: 'no game'
+        templateUrl: '/partials/nogame.html'
+
+
 # Main controller
 # ---------------
 App.controller 'appCtrl', [
@@ -93,9 +104,18 @@ App.controller 'appCtrl', [
 # ---------------
 App.controller 'checkCtrl', [
     '$scope'
+    '$http'
     '$state'
-    ($scope, $state) ->
-        $scope.test = $state.params.id
+    ($scope, $http, $state) ->
+        $http
+            url: serverUrl + "/api/points/#{$state.params.id}/check/"
+            method: 'GET'
+            withCredentials: true
+
+        .success (data) ->
+            $state.go 'play'
+        .error (data) ->
+            $state.go 'login'
 ]
 
 # Notify controller
@@ -122,282 +142,33 @@ App.controller 'playCtrl', [
     '$state'
     'uiGmapGoogleMapApi'
     ($rootScope, $scope, $http, $state, uiGmapGoogleMapApi) ->
+        $rootScope.points = {}
 
         if !$rootScope.validUser()
             $state.go 'login'
 
-        
-        $rootScope.socket.on 'notification:post', (msg, obj) ->
-            console.log msg, obj
+        $http.get serverUrl + '/api/games/current'
+        .success (data) ->
+            $http.get serverUrl + "/api/points"
+            .success (data) ->
+                $scope.points = data
+                $scope.points.forEach (point) ->
+                    $http.get serverUrl + "/api/points/"+ point.id
+                    .success (data) ->
+                        point.coordinates = { latitude: point.lat, longitude: point.lng }
+                        point.options = {
+                            labelContent: Math.abs(data.energy) || '0'
+                            labelAnchor: "0 0"
+                            labelClass: 'map-label side-' + data.side
+                        }
+                        point.icon =
+                            path: ''
+                        point.data = data
+            .error (data) ->
+                $state.go 'nogame'
 
-#        $http.get "http://localhost:3000/api/points"
-#        .success (data) ->
-#            data.forEach (obj, key) ->
-#                $http.get "http://localhost:3000/api/points/"+ obj.id
-#                .success (data) ->
-#                    obj.coordinates = { latitude: obj.lat, longitude: obj.lng }
-#                    obj.options = {
-#                        labelContent: Math.abs(data.energy)
-#                        labelAnchor: "0 0"
-#                        labelClass: 'map-label side-' + data.side
-#                    }
-
-        # DEBUG
-        $scope.points = [
-            {
-                "id": 1,
-                "name": "",
-                "code": "UEAJFZCM",
-                "latitude": 48.5870549,
-                "longitude": 7.7464128
-            }, {
-                "id": 2,
-                "name": "",
-                "code": "4SQK4UUQ",
-                "latitude": 48.5818526,
-                "longitude": 7.751036899999999
-            }, {
-                "id": 3,
-                "name": "",
-                "code": "G8P3TULX",
-                "latitude": 48.5827682,
-                "longitude": 7.7410269000000005
-            }, {
-                "id": 4,
-                "name": "",
-                "code": "QB352GKM",
-                "latitude": 48.5832224,
-                "longitude": 7.7533864999999995
-            }, {
-                "id": 5,
-                "name": "",
-                "code": "WVC8WDDQ",
-                "latitude": 48.5855787,
-                "longitude": 7.7477646
-            }, {
-                "id": 6,
-                "name": "",
-                "code": "2JV3NHL0",
-                "latitude": 48.5849542,
-                "longitude": 7.741670600000001
-            }, {
-                "id": 7,
-                "name": "",
-                "code": "WK1E6RUN",
-                "latitude": 48.581519,
-                "longitude": 7.743558900000001
-            }, {
-                "id": 8,
-                "name": "",
-                "code": "KI6ISVBP",
-                "latitude": 48.5835631,
-                "longitude": 7.7489877
-            }, {
-                "id": 9,
-                "name": "",
-                "code": "D62D5T4H",
-                "latitude": 48.5837334,
-                "longitude": 7.744245599999999
-            }, {
-                "id": 10,
-                "name": "",
-                "code": "IDVWMSOR",
-                "latitude": 48.5819165,
-                "longitude": 7.747678799999999
-            }, {
-                "id": 11,
-                "name": "",
-                "code": "J897K812",
-                "latitude": 48.5834353,
-                "longitude": 7.7457047
-            }, {
-                "id": 12,
-                "name": "",
-                "code": "N6JJU4AP",
-                "latitude": 48.5804969,
-                "longitude": 7.7499533
-            }, {
-                "id": 13,
-                "name": "",
-                "code": "GAOE5ZAD",
-                "latitude": 48.5859194,
-                "longitude": 7.750897400000001
-            }, {
-                "id": 14,
-                "name": "",
-                "code": "WTY5AI3E",
-                "latitude": 48.580610500000006,
-                "longitude": 7.743344300000001
-            }, {
-                "id": 15,
-                "name": "",
-                "code": "QN3C8OJW",
-                "latitude": 48.5818313,
-                "longitude": 7.754716900000001
-            }, {
-                "id": 16,
-                "name": "",
-                "code": "JBDS1LK3",
-                "latitude": 48.5812351,
-                "longitude": 7.7405548
-            }, {
-                "id": 17,
-                "name": "",
-                "code": "2WL1KMHD",
-                "latitude": 48.5798723,
-                "longitude": 7.7444172
-            }, {
-                "id": 18,
-                "name": "",
-                "code": "I0H0B93G",
-                "latitude": 48.579418,
-                "longitude": 7.7468634
-            }, {
-                "id": 19,
-                "name": "",
-                "code": "O8P2U16Z",
-                "latitude": 48.5847554,
-                "longitude": 7.73592
-            }, {
-                "id": 20,
-                "name": "",
-                "code": "P2V90ARG",
-                "latitude": 48.58526640000001,
-                "longitude": 7.752742799999999
-            }, {
-                "id": 21,
-                "name": "",
-                "code": "92TAX99J",
-                "latitude": 48.58407410000001,
-                "longitude": 7.7501249
-            }, {
-                "id": 22,
-                "name": "",
-                "code": "68CIHL4Y",
-                "latitude": 48.5846135,
-                "longitude": 7.7459192
-            }, {
-                "id": 23,
-                "name": "",
-                "code": "K1KC8RFE",
-                "latitude": 48.58526640000001,
-                "longitude": 7.754631000000001
-            }, {
-                "id": 24,
-                "name": "",
-                "code": "VAB1J0BS",
-                "latitude": 48.5847838,
-                "longitude": 7.7615404
-            }, {
-                "id": 25,
-                "name": "",
-                "code": "SANEVODB",
-                "latitude": 48.5793328,
-                "longitude": 7.7588367
-            }, {
-                "id": 26,
-                "name": "",
-                "code": "16F14QOC",
-                "latitude": 48.5784527,
-                "longitude": 7.755918500000001
-            }, {
-                "id": 27,
-                "name": "",
-                "code": "JH32AW35",
-                "latitude": 48.5783675,
-                "longitude": 7.7617979
-            }, {
-                "id": 28,
-                "name": "",
-                "code": "Z9MTY8LQ",
-                "latitude": 48.5788218,
-                "longitude": 7.751240700000001
-            }, {
-                "id": 29,
-                "name": "",
-                "code": "ZL8CPD69",
-                "latitude": 48.5810363,
-                "longitude": 7.760381700000001
-            }, {
-                "id": 30,
-                "name": "",
-                "code": "A1QG98V5",
-                "latitude": 48.5871401,
-                "longitude": 7.7538156
-            }, {
-                "id": 31,
-                "name": "",
-                "code": "HX3XC6NE",
-                "latitude": 48.5833643,
-                "longitude": 7.7589226
-            }, {
-                "id": 32,
-                "name": "",
-                "code": "V48L070O",
-                "latitude": 48.581377,
-                "longitude": 7.758150100000001
-            }, {
-                "id": 33,
-                "name": "",
-                "code": "83YXX41L",
-                "latitude": 48.5821436,
-                "longitude": 7.759823800000001
-            }, {
-                "id": 34,
-                "name": "",
-                "code": "VYAD7XHY",
-                "latitude": 48.5802698,
-                "longitude": 7.756948500000001
-            }, {
-                "id": 35,
-                "name": "",
-                "code": "98HV62QC",
-                "latitude": 48.5813699,
-                "longitude": 7.7621305
-            }, {
-                "id": 36,
-                "name": "",
-                "code": "NRCUPI85",
-                "latitude": 48.5791909,
-                "longitude": 7.761207800000001
-            }, {
-                "id": 37,
-                "name": "",
-                "code": "N42YZ7MC",
-                "latitude": 48.578907,
-                "longitude": 7.7664328
-            }, {
-                "id": 38,
-                "name": "",
-                "code": "DRGWCHGF",
-                "latitude": 48.5768059,
-                "longitude": 7.756991400000001
-            }, {
-                "id": 39,
-                "name": "",
-                "code": "IXLEXK9T",
-                "latitude": 48.57439240000001,
-                "longitude": 7.7589226
-            }, {
-                "id": 40,
-                "name": "",
-                "code": "MOHQ6NSB",
-                "latitude": 48.5738245,
-                "longitude": 7.7652311
-            }
-        ]
-
-        # TODO
-        $scope.points.forEach (obj, key) ->
-            obj.team = if Math.random() > 0.5 then "straliens" else "terriens"
-            obj.power = Math.round (Math.random() * 100)
-            obj.options = {
-                labelContent: obj.power
-                labelClass: 'map-label side-' + obj.team
-            }
-            obj.icon =
-                path: ''
-
+        if !$rootScope.validUser()
+            $state.go 'login'
 
         $scope.map =
             zoom: 15
@@ -447,30 +218,42 @@ App.controller 'loginCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
         $scope.showTeamPwd = false
+
+        if $rootScope.validUser()
+            $state.go 'play'
 
         $scope.onSelect = ($item) ->
             $scope.team = $item
             $scope.showTeamPwd = true
 
         $scope.validate = (form) ->
-            $http.post "http://localhost:3000/api/services/login?sections=team",
-                nickname: form.nickname
-                password: form.password
+            $http
+                withCredentials: true
+                url: serverUrl + "/api/services/login?sections=team",
+                method: "POST"
+                data:
+                    nickname: form.nickname
+                    password: form.password
+            
             .success (data) ->
                 $rootScope.user.id = data.id
                 $rootScope.user.name = data.nickname
                 $rootScope.user.teamId = data.teamId
                 $rootScope.user.team = data.team
 
-                $cookies.putObject("user", $rootScope.user)
+                localStorage.user = JSON.stringify $rootScope.user
+
+                $rootScope.updateVitals()
+
+                $rootScope.socket.disconnect()
+                $rootScope.socket = io wsUrl
 
                 $state.go 'play'
             .error (data) ->
-                # TODO: make something with the error
-                console.log data
+                if data.type == 'AuthenticationError'
+                    $scope.error = true
 ]
 
 
@@ -479,36 +262,99 @@ App.controller 'signupCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
-        $scope.showTeamPwd = false
+    ($rootScope, $scope, $state, $http) ->
+        if $rootScope.validUser()
+            $state.go 'play'
 
-        $http.get "http://localhost:3000/api/teams"
+        $scope.teams = []
+
+        $scope.errors = {}
+
+        $scope.resultTeam =
+            name: ''
+            pwd: ''
+            slogan: ''
+
+        $http.get serverUrl + "/api/teams"
         .success (data) ->
-            if !data or data.length == 0
-                data = [
-                    "straliens"
-                    "terrien"
-                ]
             $scope.teams = data
 
+        $scope.team = ->
+            return team for team in $scope.teams when team.name.toLowerCase() == ($scope.resultTeam.name || '').toLowerCase()
+
         $scope.create = (form) ->
-            $http.post 'http://localhost:3000/api/users?sections=team',
-                nickname: form.nickname
-                email: form.email
-                password: form.password
-            .success (data) ->
-                $rootScope.user.id = data.id
-                $rootScope.user.name = data.nickname
-                $rootScope.user.teamId = data.teamId
-                $rootScope.user.team = data.team
+            createUser = (user) ->
+                $http
+                    withCredentials: true
+                    url: serverUrl + '/api/users?sections=team',
+                    method: "POST"
+                    data:
+                        nickname: user.nickname
+                        email: user.email
+                        password: user.password
+                        teamPassword: user.teamPassword
+                        teamId: user.teamId
+                .success (data) ->
+                    $rootScope.user.id = data.id
+                    $rootScope.user.name = data.nickname
+                    $rootScope.user.teamId = data.teamId
+                    $rootScope.user.team = data.team
 
-                $cookies.putObject("user", $rootScope.user)
+                    localStorage.user = JSON.stringify $rootScope.user
 
-                $state.go 'play'
-            .error (data) ->
-                # TODO: make something with the error
-                console.log data
+                    $rootScope.updateVitals()
+
+                    $rootScope.socket.disconnect()
+                    $rootScope.socket = io wsUrl
+
+                    $state.go 'play'
+                .error (data) ->
+                    data.fields.forEach (err) ->
+                        $scope.errors[err.path] = err.message
+
+            if !$scope.team()
+                $http.post serverUrl + '/api/teams',
+                    name: $scope.resultTeam.name
+                    slogan: $scope.resultTeam.slogan
+                    password: $scope.resultTeam.password
+                .success (team) ->
+                    $scope.team = ->
+                        return team
+
+                    user =
+                        nickname: form.nickname.$viewValue
+                        email: form.email.$viewValue
+                        password: form.password.$viewValue
+                        teamPassword: form.teamPassword.$viewValue
+                        teamId: team.id
+                    createUser(user)
+                .error (data) ->
+                    # TODO
+
+            else
+                user =
+                    nickname: form.nickname.$viewValue
+                    email: form.email.$viewValue
+                    password: form.password.$viewValue
+                    teamPassword: form.teamPassword.$viewValue
+                    teamId: $scope.team().id
+                createUser(user)
+]
+
+App.controller 'nogameCtrl', [
+    '$rootScope'
+    '$scope'
+    '$state'
+    '$http'
+    ($rootScope, $scope, $state, $http) ->
+        $http.get serverUrl + '/api/games'
+        .success (games) ->
+            $scope.games = games
+            $scope.games.forEach (game) ->
+                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM à HH:mm"
+                game.endDate = moment(new Date(game.endTime)).format "HH:mm"
+        .error (data) ->
+            console.log data
 ]
 
 # RUN !!
@@ -517,23 +363,46 @@ App.run [
     '$rootScope'
     '$state'
     '$window'
-    '$cookies'
-    ($rootScope, $state, $window, $cookies) ->
+    '$http'
+    ($rootScope, $state, $window, $http) ->
         $rootScope.$state = $state
-        $rootScope.$cookies = $cookies
 
-        # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
 
-        $rootScope.user = if $cookies.getObject('user') then $cookies.getObject('user') else
+        $http
+            withCredentials: true
+            url: serverUrl + '/api/services/logged-in'
+        .success (status) ->
+            if status == true
+                if localStorage.user
+                    $rootScope.user = JSON.parse localStorage.user
+
+        $rootScope.user =
             team: null
             teamId: -1
             score: 0
             energy: 0
+            id: null
+
+        $rootScope.socket = io wsUrl
+        $rootScope.socket.on 'score:update', (userScore, teamScore) ->
+            $rootScope.user.score = userScore
+
+        $rootScope.socket.on 'user:update', (data) ->
+            if data.energy then $rootScope.user.energy = data.energy
 
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
-            return !!$rootScope.user.name
+            return localStorage.user
+        
+        $rootScope.updateVitals = ->
+            $http
+                withCredentials: true
+                url: serverUrl + "/api/users/me",
+                method: "GET"
+            .success (data) ->
+                if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
+                if data.gameUser.score then $rootScope.user.score = data.gameUser.score
 
-        $rootScope.socket = io("ws://127.0.0.1:3000")
+        $rootScope.updateVitals()
 ]

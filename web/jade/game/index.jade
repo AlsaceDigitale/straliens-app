@@ -21,21 +21,23 @@ html(ng-app="straliens")
                 events="map.events")
                     ui-gmap-markers(
                     models="points"
-                    coords="'self'"
+                    coords="'coordinates'"
                     options="'options'"
                     icon="'icon'"
-                    labelContent="'id'")
+                    labelContent="'name'")
 
             footer
                 .wrapper
                     .left MSG
                     .right {{endTime}}
-                    .center {{user.team | uppercase}}
+                    .center {{user.side | uppercase}}
 
         ui-view
 
 // Plugins
 script(src='/plugins/lodash/lodash.min.js')
+script(src='/plugins/moment/moment.js')
+script(src='/plugins/moment/locale/fr.js')
 
 
 // Angular

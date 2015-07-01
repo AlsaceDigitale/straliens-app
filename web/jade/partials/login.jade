@@ -7,7 +7,14 @@
                     input#firstname.form-control(type='text', name='nickname', ng-model='nickname', placeholder='Nom d\'utilisateur' required='')
                 .form-group
                     label(for='password') Mot de passe
-                    input#email.form-control(type='password', name='password', ng-model='password', placeholder='Tapez votre mot de passe', required='')
+                    input#email.form-control(
+                        type='password',
+                        name='password',
+                        ng-model='password',
+                        placeholder='Tapez votre mot de passe',
+                        ng-class="{error: error}"
+                        ng-change="error = false"
+                        required='')
                 button.btn.btn-primary.btn-fw(ng-click="validate(this)") Valider
                 hr
             button.btn.btn-warning.btn-fw.signup(ui-sref="signup") Inscription
