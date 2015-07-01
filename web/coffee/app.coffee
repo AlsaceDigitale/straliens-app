@@ -1,7 +1,7 @@
 serverUrl = 'http://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 wsUrl = 'ws://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies']
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         v: '3.17'
@@ -130,24 +130,24 @@ App.controller 'playCtrl', [
 
         if !$rootScope.validUser()
             $state.go 'login'
-        else
-            $http.get serverUrl + '/api/games/current'
+
+        $http.get serverUrl + '/api/games/current'
+        .success (data) ->
+            $http.get serverUrl + "/api/points"
             .success (data) ->
-                $http.get serverUrl + "/api/points"
-                .success (data) ->
-                    $scope.points = data
-                    $scope.points.forEach (point) ->
-                        $http.get serverUrl + "/api/points/"+ point.id
-                        .success (data) ->
-                            point.coordinates = { latitude: point.lat, longitude: point.lng }
-                            point.options = {
-                                labelContent: Math.abs(data.energy) || '0'
-                                labelAnchor: "0 0"
-                                labelClass: 'map-label side-' + data.side
-                            }
-                            point.icon =
-                                path: ''
-                            point.data = data
+                $scope.points = data
+                $scope.points.forEach (point) ->
+                    $http.get serverUrl + "/api/points/"+ point.id
+                    .success (data) ->
+                        point.coordinates = { latitude: point.lat, longitude: point.lng }
+                        point.options = {
+                            labelContent: Math.abs(data.energy) || '0'
+                            labelAnchor: "0 0"
+                            labelClass: 'map-label side-' + data.side
+                        }
+                        point.icon =
+                            path: ''
+                        point.data = data
             .error (data) ->
                 $state.go 'nogame'
 
@@ -202,9 +202,11 @@ App.controller 'loginCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
         $scope.showTeamPwd = false
+
+        if $rootScope.validUser()
+            $state.go 'play'
 
         $scope.onSelect = ($item) ->
             $scope.team = $item
@@ -225,7 +227,8 @@ App.controller 'loginCtrl', [
                 $rootScope.user.teamId = data.teamId
                 $rootScope.user.team = data.team
 
-                $cookies.putObject("user", $rootScope.user)
+                localStorage.user = JSON.stringify $rootScope.user
+
                 $rootScope.socket.disconnect()
                 $rootScope.socket = io wsUrl
 
@@ -241,8 +244,10 @@ App.controller 'signupCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
+        if $rootScope.validUser()
+            $state.go 'play'
+
         $scope.teams = []
 
         $scope.errors = {}
@@ -277,7 +282,8 @@ App.controller 'signupCtrl', [
                     $rootScope.user.teamId = data.teamId
                     $rootScope.user.team = data.team
 
-                    $cookies.putObject("user", $rootScope.user)
+                    localStorage.user = JSON.stringify $rootScope.user
+
                     $rootScope.socket.disconnect()
                     $rootScope.socket = io wsUrl
 
@@ -320,8 +326,7 @@ App.controller 'nogameCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
         $http.get serverUrl + '/api/games'
         .success (games) ->
             $scope.games = games
@@ -338,32 +343,35 @@ App.run [
     '$rootScope'
     '$state'
     '$window'
-    '$cookies'
-    ($rootScope, $state, $window, $cookies) ->
+    '$http'
+    ($rootScope, $state, $window, $http) ->
         $rootScope.$state = $state
-        $rootScope.$cookies = $cookies
 
-        # TODO: récupérer le temps restant
         $rootScope.endTime = '00H00'
 
-        #if $cookies.get('user')
-
+        $http
+            withCredentials: true
+            url: serverUrl + '/api/services/logged-in'
+        .success (status) ->
+            if status == true
+                if localStorage.user
+                    $rootScope.user = JSON.parse localStorage.user
 
         $rootScope.user =
             team: null
             teamId: -1
             score: 0
             energy: 0
+            id: null
 
         $rootScope.socket = io wsUrl
         $rootScope.socket.on 'score:update', (userScore, teamScore) ->
-            console.log userScore, teamScore
             $rootScope.user.score = userScore
 
-        $rootScope.socket.on 'user:update', (data, test) ->
-            console.log data, test
+        $rootScope.socket.on 'user:update', (data) ->
+            if data.energy then $rootScope.user.energy = data.energy
 
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
-            return !!$rootScope.user.name
+            return localStorage.user
 ]
