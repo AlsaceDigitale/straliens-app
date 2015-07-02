@@ -8,7 +8,7 @@ html(ng-app="straliens")
         link(rel="stylesheet" href="/chat.css")
 
     body(ng-controller="notifCtrl")
-        .game(ng-controller="playCtrl")
+        .game(ng-controller="playCtrl" ng-class="{terriens: side == 'TERRIENS'}")
             nav.header
                 .left SCORE {{user.score}}
                 //button(ng-click="shownotify()") TEST
