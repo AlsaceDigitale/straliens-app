@@ -6,10 +6,11 @@ html(ng-app="straliens")
         link(href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css', rel='stylesheet', media='all')
         link(rel="stylesheet" href="/css/game/styles.min.css")
 
-    body(ng-controller="appCtrl")
+    body(ng-controller="notifCtrl")
         .game(ng-controller="playCtrl")
             nav.header
-                .left SCORE {{user.score}}  {{$scope.markers}}
+                .left SCORE {{user.score}}
+                //button(ng-click="shownotify()") TEST
                 .right ENERGIE {{user.energy}}
             section
 
@@ -50,4 +51,5 @@ script(src='/plugins/angular-bootstrap/ui-bootstrap.min.js')
 script(src='/plugins/angular-bootstrap/ui-bootstrap-tpls.min.js')
 
 // Straliens scripting
+script(src='/plugins/angular-notify/dist/angular-notify.js')
 script(src='/js/app.js')

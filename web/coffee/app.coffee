@@ -1,7 +1,8 @@
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies', 'cgNotify']
 serverUrl = 'http://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 wsUrl = 'ws://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap']
+
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         v: '3.17'
@@ -117,6 +118,21 @@ App.controller 'checkCtrl', [
             $state.go 'login'
 ]
 
+# Notify controller
+# -----------------
+
+
+
+App.controller 'notifCtrl', [
+    '$scope'
+    'notify'
+
+    ($scope, notify) ->
+        notify.config {startTop : 0, maximumOpen: 3, templateUrl: "/resources/angular-notify-custom.html"}    
+        $scope.shownotify = ->
+            notify "Hello there" 
+]
+    
 # Index page controller
 # ---------------------
 App.controller 'playCtrl', [
@@ -139,7 +155,6 @@ App.controller 'playCtrl', [
                     .success (data) ->
                         point.coordinates = { latitude: point.lat, longitude: point.lng }
                         point.options = {
-                            labelAnchor: "0 0"
                             labelContent: Math.abs(data.energy) || '0'
                             labelClass: 'map-label side-' + data.side
                         }
@@ -151,8 +166,6 @@ App.controller 'playCtrl', [
 
         if !$rootScope.validUser()
             $state.go 'login'
-
-        $scope.markers = {}
 
         $scope.map =
             zoom: 15
@@ -200,7 +213,6 @@ App.controller 'playCtrl', [
         if $rootScope.ioSet
             $rootScope.ioSet = false
             uiGmapIsReady.promise().then (maps) ->
-                $rootScope.socket = io wsUrl
                 $rootScope.socket.on 'score:update', (userScore, teamScore) ->
                     $rootScope.user.score = userScore
                     $rootScope.$apply()
@@ -251,6 +263,8 @@ App.controller 'loginCtrl', [
 
                 localStorage.user = JSON.stringify $rootScope.user
 
+                $rootScope.updateVitals()
+
                 $rootScope.socket.disconnect()
                 $rootScope.socket = io wsUrl
 
@@ -259,6 +273,7 @@ App.controller 'loginCtrl', [
                 if data.type == 'AuthenticationError'
                     $scope.error = true
 ]
+
 
 App.controller 'signupCtrl', [
     '$rootScope'
@@ -304,6 +319,8 @@ App.controller 'signupCtrl', [
                     $rootScope.user.team = data.team
 
                     localStorage.user = JSON.stringify $rootScope.user
+
+                    $rootScope.updateVitals()
 
                     $rootScope.socket.disconnect()
                     $rootScope.socket = io wsUrl
@@ -352,7 +369,7 @@ App.controller 'nogameCtrl', [
         .success (games) ->
             $scope.games = games
             $scope.games.forEach (game) ->
-                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
+                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM à HH:mm"
                 game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
             console.log data
@@ -365,7 +382,8 @@ App.run [
     '$state'
     '$window'
     '$http'
-    ($rootScope, $state, $window, $http) ->
+    'notify'
+    ($rootScope, $state, $window, $http, notify) ->
         $rootScope.$state = $state
 
         $rootScope.ioSet = true
@@ -390,8 +408,23 @@ App.run [
             energy: 0
             id: null
 
+        $rootScope.socket = io wsUrl
 
+        $rootScope.socket.on 'notification:send', (data) ->
+            notify "Hello there "+data
+            
         $rootScope.validUser = () ->
             # TODO : check with token/whatever
             return localStorage.user
+        
+        $rootScope.updateVitals = ->
+            $http
+                withCredentials: true
+                url: serverUrl + "/api/users/me",
+                method: "GET"
+            .success (data) ->
+                if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
+                if data.gameUser.score then $rootScope.user.score = data.gameUser.score
+
+        $rootScope.updateVitals()
 ]
