@@ -64,7 +64,6 @@ App.config ($stateProvider, $urlRouterProvider) ->
     $stateProvider
     .state 'play',
         url: '/play'
-        controller: 'playCtrl'
         title: 'Accueil'
 
     .state 'login',
@@ -103,16 +102,18 @@ App.controller 'appCtrl', [
 # Check controller
 # ---------------
 App.controller 'checkCtrl', [
+    '$rootScope'
     '$scope'
     '$http'
     '$state'
-    ($scope, $http, $state) ->
+    ($rootScope, $scope, $http, $state) ->
         $http
             url: serverUrl + "/api/points/#{$state.params.id}/check/"
             method: 'GET'
             withCredentials: true
 
         .success (data) ->
+            $rootScope.user.energy = 0
             $state.go 'play'
         .error (data) ->
             $state.go 'login'
