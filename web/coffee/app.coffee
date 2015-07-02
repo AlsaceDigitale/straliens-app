@@ -474,6 +474,8 @@ getSide = ($rootScope, $http) ->
             withCredentials: true
             url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
         .success (side) ->
+            if side == "EARTHLINGS"
+                side = "TERRIENS"
             $rootScope.side = side
             # TODO : ajouter des classes pour les couleurs
         .error (data) ->
