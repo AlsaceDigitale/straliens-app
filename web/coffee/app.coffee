@@ -149,9 +149,33 @@ App.controller 'playCtrl', [
     '$http'
     '$state'
     'uiGmapIsReady'
-    ($rootScope, $scope, $http, $state, uiGmapIsReady) ->
+    '$timeout'
+    ($rootScope, $scope, $http, $state, uiGmapIsReady, $timeout) ->
         $http.get serverUrl + '/api/games/current'
-        .success (data) ->
+        .success (game) ->
+            $rootScope.currentGame = game
+            getSide($rootScope, $http)
+            console.log game
+
+            fnTimeout = () ->
+                time = (new Date(game.endTime) - new Date(Date.now()))
+                console.log time, new Date(game.endTime).toISOString(), new Date(Date.now()).toISOString()
+
+                diff = Math.floor(time / 1000)
+                secs_diff = diff % 60
+                diff = Math.floor(diff / 60)
+                mins_diff = diff % 60
+                diff = Math.floor(diff / 60)
+                hours_diff = diff
+                diff = Math.floor(diff / 24)
+
+                $rootScope.endTime = if time > 0 then "#{(if hours_diff<10 then '0' else '') + hours_diff}:#{(if mins_diff<10 then '0' else '') + mins_diff}:#{(if secs_diff<10 then '0' else '') + secs_diff}" else "00:00:00"
+                if time > 0
+                    $rootScope.hourTimeout  = $timeout fnTimeout, 1000
+                else $state.go 'nogame'
+
+            $rootScope.hourTimeout  = $timeout fnTimeout, 1000
+
             $http.get serverUrl + "/api/points"
             .success (data) ->
                 $rootScope.points = data
@@ -166,8 +190,8 @@ App.controller 'playCtrl', [
                         point.icon =
                             path: ''
                         point.data = data
-            .error (data) ->
-                $state.go 'nogame'
+        .error (data) ->
+            $state.go 'nogame'
 
         if !$rootScope.validUser()
             $state.go 'login'
@@ -265,6 +289,7 @@ App.controller 'loginCtrl', [
                 $rootScope.user.team = data.team
 
                 localStorage.user = JSON.stringify $rootScope.user
+                getSide($rootScope, $http)
 
                 $rootScope.updateVitals()
 
@@ -322,6 +347,7 @@ App.controller 'signupCtrl', [
                     $rootScope.user.team = data.team
 
                     localStorage.user = JSON.stringify $rootScope.user
+                    getSide($rootScope, $http)
 
                     $rootScope.updateVitals()
 
@@ -371,9 +397,12 @@ App.controller 'nogameCtrl', [
         $http.get serverUrl + '/api/games'
         .success (games) ->
             $scope.games = games
-            $scope.games.forEach (game) ->
-                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM à HH:mm"
-                game.endDate = moment(new Date(game.endTime)).format "HH:mm"
+            $scope.games.forEach (game, key) ->
+                if new Date(game.startTime) <= new Date Date.now()
+                    $scope.games.splice key, 1
+                else
+                    game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
+                    game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
             console.log data
 ]
@@ -389,7 +418,7 @@ App.run [
     ($rootScope, $state, $window, $http, notify) ->
         $rootScope.$state = $state
 
-        $rootScope.endTime = '00H00'
+        $rootScope.endTime = '00:00:00'
         $rootScope.points = {}
 
         $http
@@ -398,14 +427,6 @@ App.run [
         .success (status) ->
             if status == true and localStorage.user and (JSON.parse localStorage.user).id
                 $rootScope.user = JSON.parse localStorage.user
-                $http
-                    withCredentials: true
-                    url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
-                .success (side) ->
-                    $rootScope.side = side
-                    # TODO : ajouter des classes pour les couleurs
-                .error (data) ->
-                    console.log data
             else
                 delete localStorage.user
 
@@ -417,9 +438,6 @@ App.run [
             id: null
 
         $rootScope.side = 'NEUTRE'
-
-
-
 
         $rootScope.socket = io wsUrl
 
@@ -440,3 +458,14 @@ App.run [
 
         $rootScope.updateVitals()
 ]
+
+getSide = ($rootScope, $http) ->
+    if $rootScope.validUser() and $rootScope.currentGame
+        $http
+            withCredentials: true
+            url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
+        .success (side) ->
+            $rootScope.side = side
+            # TODO : ajouter des classes pour les couleurs
+        .error (data) ->
+            console.log data
