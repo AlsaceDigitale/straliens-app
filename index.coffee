@@ -2,7 +2,7 @@
 express = require 'express'
 nodeHttp = require 'http'
 
-port = process.env.PORT || 3000
+port = process.env.PORT || 8000
 
 # EXPRESS / SOCKET.IO
 # -------------------
