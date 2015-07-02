@@ -212,7 +212,7 @@ App.controller 'playCtrl', [
 
         if $rootScope.ioSet
             $rootScope.ioSet = false
-            uiGmapIsReady.promise().then (maps) ->
+            uiGmapIsReady.promise().then ->
                 $rootScope.socket.on 'score:update', (userScore, teamScore) ->
                     $rootScope.user.score = userScore
                     $rootScope.$apply()
@@ -221,6 +221,7 @@ App.controller 'playCtrl', [
                     $rootScope.points.forEach (point) ->
                         if point.id == data.point.id
                             point.options = {
+                                labelAnchor: '0 0'
                                 labelContent: Math.abs(data.gamePoint.energy) || '0'
                                 labelClass: 'map-label side-' + data.gamePoint.side
                             }
