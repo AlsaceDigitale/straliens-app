@@ -65,6 +65,13 @@ App.config ($stateProvider, $urlRouterProvider) ->
     .state 'play',
         url: '/play'
         title: 'Accueil'
+        controller: [
+            '$rootScope'
+            '$state'
+            ($rootScope, $state) ->
+                if !$rootScope.validUser()
+                    $state.go 'login'
+            ]
 
     .state 'login',
         url: '/login'
@@ -143,9 +150,6 @@ App.controller 'playCtrl', [
     '$state'
     'uiGmapIsReady'
     ($rootScope, $scope, $http, $state, uiGmapIsReady) ->
-        if !$rootScope.validUser()
-            $state.go 'login'
-
         $http.get serverUrl + '/api/games/current'
         .success (data) ->
             $http.get serverUrl + "/api/points"
@@ -211,26 +215,23 @@ App.controller 'playCtrl', [
 
                         map.panTo {lat: Y, lng: X}
 
-        if $rootScope.ioSet
-            $rootScope.ioSet = false
-            uiGmapIsReady.promise().then ->
-                $rootScope.socket.on 'score:update', (userScore, teamScore) ->
-                    $rootScope.user.score = userScore
-                    $rootScope.$apply()
+        uiGmapIsReady.promise().then ->
+            $rootScope.socket.on 'score:update', (userScore, teamScore) ->
+                $rootScope.user.score = userScore
+                $rootScope.$apply()
 
-                $rootScope.socket.on 'point:update', (data) ->
-                    $rootScope.points.forEach (point) ->
-                        if point.id == data.point.id
-                            point.options = {
-                                labelAnchor: '0 0'
-                                labelContent: Math.abs(data.gamePoint.energy) || '0'
-                                labelClass: 'map-label side-' + data.gamePoint.side
-                            }
-                            point.data = data.gamePoint
+            $rootScope.socket.on 'point:update', (data) ->
+                point = p for p in $scope.points when p.id == data.point.id
+                point.options = {
+                    labelAnchor: '0 0'
+                    labelContent: Math.abs(data.gamePoint.energy) || '0'
+                    labelClass: 'map-label side-' + data.gamePoint.side
+                }
+                point.data = data.gamePoint
 
-                $rootScope.socket.on 'user:update', (data) ->
-                    if data.energy then $rootScope.user.energy = data.energy
-                    $rootScope.$apply()
+            $rootScope.socket.on 'user:update', (data) ->
+                if data.energy then $rootScope.user.energy = data.energy
+                $rootScope.$apply()
 ]
 
 App.controller 'loginCtrl', [
@@ -388,8 +389,6 @@ App.run [
     ($rootScope, $state, $window, $http, notify) ->
         $rootScope.$state = $state
 
-        $rootScope.ioSet = true
-
         $rootScope.endTime = '00H00'
         $rootScope.points = {}
 
@@ -397,9 +396,16 @@ App.run [
             withCredentials: true
             url: serverUrl + '/api/services/logged-in'
         .success (status) ->
-            if status == true
-                if localStorage.user
-                    $rootScope.user = JSON.parse localStorage.user
+            if status == true and localStorage.user and (JSON.parse localStorage.user).id
+                $rootScope.user = JSON.parse localStorage.user
+                $http
+                    withCredentials: true
+                    url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
+                .success (side) ->
+                    $rootScope.side = side
+                    # TODO : ajouter des classes pour les couleurs
+                .error (data) ->
+                    console.log data
             else
                 delete localStorage.user
 
@@ -410,14 +416,18 @@ App.run [
             energy: 0
             id: null
 
+        $rootScope.side = 'NEUTRE'
+
+
+
+
         $rootScope.socket = io wsUrl
 
         $rootScope.socket.on 'notification:send', (data) ->
             notify "Hello there "+data
             
         $rootScope.validUser = () ->
-            # TODO : check with token/whatever
-            return localStorage.user
+            return !!localStorage.user
         
         $rootScope.updateVitals = ->
             $http
