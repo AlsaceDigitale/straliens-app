@@ -1,10 +1,8 @@
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies', 'cgNotify']
 serverUrl = 'http://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 wsUrl = 'ws://' + if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu' then 'straliens-server.scalingo.io' else 'localhost:3000'
 
-wsUrl = 'ws://' + if location.host == 'straliens-staging.scalingo.io' then 'straliens-staging-server.scalingo.io'
-serverUrl = 'http://' + if location.host == 'straliens-staging.scalingo.io' then 'straliens-staging-server.scalingo.io'
 
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies']
 App.config (uiGmapGoogleMapApiProvider) ->
     uiGmapGoogleMapApiProvider.configure {
         v: '3.17'
@@ -66,8 +64,16 @@ App.config ($stateProvider, $urlRouterProvider) ->
     $stateProvider
     .state 'play',
         url: '/play'
-        controller: 'playCtrl'
         title: 'Accueil'
+        controller: [
+            '$rootScope'
+            '$state'
+            ($rootScope, $state) ->
+                if !$rootScope.validUser()
+                    $state.go 'login'
+                else if !$rootScope.currentGame
+                    $state.go 'nogame'
+        ]
 
     .state 'login',
         url: '/login'
@@ -105,21 +111,38 @@ App.controller 'appCtrl', [
 # Check controller
 # ---------------
 App.controller 'checkCtrl', [
+    '$rootScope'
     '$scope'
     '$http'
     '$state'
-    ($scope, $http, $state) ->
+    ($rootScope, $scope, $http, $state) ->
         $http
             url: serverUrl + "/api/points/#{$state.params.id}/check/"
             method: 'GET'
             withCredentials: true
 
         .success (data) ->
+            $rootScope.user.energy = 0
             $state.go 'play'
         .error (data) ->
             $state.go 'login'
 ]
 
+# Notify controller
+# -----------------
+
+
+
+App.controller 'notifCtrl', [
+    '$scope'
+    'notify'
+
+    ($scope, notify) ->
+        notify.config {startTop : 0, maximumOpen: 3, templateUrl: "/resources/angular-notify-custom.html"}    
+        $scope.shownotify = ->
+            notify "Hello there" 
+]
+    
 # Index page controller
 # ---------------------
 App.controller 'playCtrl', [
@@ -127,25 +150,46 @@ App.controller 'playCtrl', [
     '$scope'
     '$http'
     '$state'
-    'uiGmapGoogleMapApi'
-    ($rootScope, $scope, $http, $state, uiGmapGoogleMapApi) ->
-        $rootScope.points = {}
-
+    'uiGmapIsReady'
+    '$timeout'
+    ($rootScope, $scope, $http, $state, uiGmapIsReady, $timeout) ->
         if !$rootScope.validUser()
             $state.go 'login'
         else
             $http.get serverUrl + '/api/games/current'
-            .success (data) ->
+            .success (game) ->
+                $rootScope.currentGame = game
+                getSide($rootScope, $http)
+                console.log game
+
+                fnTimeout = () ->
+                    time = (new Date(game.endTime) - new Date(Date.now()))
+                    console.log time, new Date(game.endTime).toISOString(), new Date(Date.now()).toISOString()
+
+                    diff = Math.floor(time / 1000)
+                    secs_diff = diff % 60
+                    diff = Math.floor(diff / 60)
+                    mins_diff = diff % 60
+                    diff = Math.floor(diff / 60)
+                    hours_diff = diff
+                    diff = Math.floor(diff / 24)
+
+                    $rootScope.endTime = if time > 0 then "#{(if hours_diff<10 then '0' else '') + hours_diff}:#{(if mins_diff<10 then '0' else '') + mins_diff}:#{(if secs_diff<10 then '0' else '') + secs_diff}" else "00:00:00"
+                    if time > 0
+                        $rootScope.hourTimeout  = $timeout fnTimeout, 1000
+                    else $state.go 'nogame'
+
+                $rootScope.hourTimeout  = $timeout fnTimeout, 1000
+
                 $http.get serverUrl + "/api/points"
                 .success (data) ->
-                    $scope.points = data
-                    $scope.points.forEach (point) ->
+                    $rootScope.points = data
+                    $rootScope.points.forEach (point) ->
                         $http.get serverUrl + "/api/points/"+ point.id
                         .success (data) ->
                             point.coordinates = { latitude: point.lat, longitude: point.lng }
                             point.options = {
                                 labelContent: Math.abs(data.energy) || '0'
-                                labelAnchor: "0 0"
                                 labelClass: 'map-label side-' + data.side
                             }
                             point.icon =
@@ -153,9 +197,6 @@ App.controller 'playCtrl', [
                             point.data = data
             .error (data) ->
                 $state.go 'nogame'
-
-        if !$rootScope.validUser()
-            $state.go 'login'
 
         $scope.map =
             zoom: 15
@@ -173,6 +214,7 @@ App.controller 'playCtrl', [
                 streetViewControl: false
                 overviewMapControl: false
                 mapTypeControl: false
+            control: {}
             events:
                 center_changed: (map) ->
                     allowedBounds =
@@ -198,6 +240,24 @@ App.controller 'playCtrl', [
                             Y = AmaxY
 
                         map.panTo {lat: Y, lng: X}
+
+        uiGmapIsReady.promise().then ->
+            $rootScope.socket.on 'score:update', (userScore, teamScore) ->
+                $rootScope.user.score = userScore
+                $rootScope.$apply()
+
+            $rootScope.socket.on 'point:update', (data) ->
+                point = p for p in $scope.points when p.id == data.point.id
+                point.options = {
+                    labelAnchor: '0 0'
+                    labelContent: Math.abs(data.gamePoint.energy) || '0'
+                    labelClass: 'map-label side-' + data.gamePoint.side
+                }
+                point.data = data.gamePoint
+
+            $rootScope.socket.on 'user:update', (data) ->
+                if data.energy then $rootScope.user.energy = data.energy
+                $rootScope.$apply()
 ]
 
 App.controller 'loginCtrl', [
@@ -205,9 +265,11 @@ App.controller 'loginCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
         $scope.showTeamPwd = false
+
+        if $rootScope.validUser()
+            $state.go 'play'
 
         $scope.onSelect = ($item) ->
             $scope.team = $item
@@ -228,7 +290,11 @@ App.controller 'loginCtrl', [
                 $rootScope.user.teamId = data.teamId
                 $rootScope.user.team = data.team
 
-                $cookies.putObject("user", $rootScope.user)
+                localStorage.user = JSON.stringify $rootScope.user
+                getSide($rootScope, $http)
+
+                $rootScope.updateVitals()
+
                 $rootScope.socket.disconnect()
                 $rootScope.socket = io wsUrl
 
@@ -244,8 +310,10 @@ App.controller 'signupCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
+        if $rootScope.validUser()
+            $state.go 'play'
+
         $scope.teams = []
 
         $scope.errors = {}
@@ -280,7 +348,11 @@ App.controller 'signupCtrl', [
                     $rootScope.user.teamId = data.teamId
                     $rootScope.user.team = data.team
 
-                    $cookies.putObject("user", $rootScope.user)
+                    localStorage.user = JSON.stringify $rootScope.user
+                    getSide($rootScope, $http)
+
+                    $rootScope.updateVitals()
+
                     $rootScope.socket.disconnect()
                     $rootScope.socket = io wsUrl
 
@@ -323,14 +395,16 @@ App.controller 'nogameCtrl', [
     '$scope'
     '$state'
     '$http'
-    '$cookies'
-    ($rootScope, $scope, $state, $http, $cookies) ->
+    ($rootScope, $scope, $state, $http) ->
         $http.get serverUrl + '/api/games'
         .success (games) ->
             $scope.games = games
-            $scope.games.forEach (game) ->
-                game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
-                game.endDate = moment(new Date(game.endTime)).format "HH:mm"
+            $scope.games.forEach (game, key) ->
+                if new Date(game.startTime) <= new Date Date.now()
+                    $scope.games.splice key, 1
+                else
+                    game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
+                    game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
             console.log data
 ]
@@ -341,32 +415,59 @@ App.run [
     '$rootScope'
     '$state'
     '$window'
-    '$cookies'
-    ($rootScope, $state, $window, $cookies) ->
+    '$http'
+    'notify'
+    ($rootScope, $state, $window, $http, notify) ->
         $rootScope.$state = $state
-        $rootScope.$cookies = $cookies
 
-        # TODO: récupérer le temps restant
-        $rootScope.endTime = '00H00'
+        $rootScope.endTime = '00:00:00'
+        $rootScope.points = {}
 
-        #if $cookies.get('user')
-
+        $http
+            withCredentials: true
+            url: serverUrl + '/api/services/logged-in'
+        .success (status) ->
+            if status == true and localStorage.user and (JSON.parse localStorage.user).id
+                $rootScope.user = JSON.parse localStorage.user
+            else
+                delete localStorage.user
 
         $rootScope.user =
             team: null
             teamId: -1
             score: 0
             energy: 0
+            id: null
+
+        $rootScope.side = 'NEUTRE'
 
         $rootScope.socket = io wsUrl
-        $rootScope.socket.on 'score:update', (userScore, teamScore) ->
-            console.log userScore, teamScore
-            $rootScope.user.score = userScore
 
-        $rootScope.socket.on 'user:update', (data, test) ->
-            console.log data, test
-
+        $rootScope.socket.on 'notification:send', (data) ->
+            notify "Hello there "+data
+            
         $rootScope.validUser = () ->
-            # TODO : check with token/whatever
-            return !!$rootScope.user.name
+            return !!localStorage.user
+        
+        $rootScope.updateVitals = ->
+            $http
+                withCredentials: true
+                url: serverUrl + "/api/users/me",
+                method: "GET"
+            .success (data) ->
+                if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
+                if data.gameUser.score then $rootScope.user.score = data.gameUser.score
+
+        $rootScope.updateVitals()
 ]
+
+getSide = ($rootScope, $http) ->
+    if $rootScope.validUser() and $rootScope.currentGame
+        $http
+            withCredentials: true
+            url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
+        .success (side) ->
+            $rootScope.side = side
+            # TODO : ajouter des classes pour les couleurs
+        .error (data) ->
+            console.log data
