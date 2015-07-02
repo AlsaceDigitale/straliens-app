@@ -71,7 +71,9 @@ App.config ($stateProvider, $urlRouterProvider) ->
             ($rootScope, $state) ->
                 if !$rootScope.validUser()
                     $state.go 'login'
-            ]
+                else if !$rootScope.currentGame
+                    $state.go 'nogame'
+        ]
 
     .state 'login',
         url: '/login'
@@ -151,50 +153,50 @@ App.controller 'playCtrl', [
     'uiGmapIsReady'
     '$timeout'
     ($rootScope, $scope, $http, $state, uiGmapIsReady, $timeout) ->
-        $http.get serverUrl + '/api/games/current'
-        .success (game) ->
-            $rootScope.currentGame = game
-            getSide($rootScope, $http)
-            console.log game
-
-            fnTimeout = () ->
-                time = (new Date(game.endTime) - new Date(Date.now()))
-                console.log time, new Date(game.endTime).toISOString(), new Date(Date.now()).toISOString()
-
-                diff = Math.floor(time / 1000)
-                secs_diff = diff % 60
-                diff = Math.floor(diff / 60)
-                mins_diff = diff % 60
-                diff = Math.floor(diff / 60)
-                hours_diff = diff
-                diff = Math.floor(diff / 24)
-
-                $rootScope.endTime = if time > 0 then "#{(if hours_diff<10 then '0' else '') + hours_diff}:#{(if mins_diff<10 then '0' else '') + mins_diff}:#{(if secs_diff<10 then '0' else '') + secs_diff}" else "00:00:00"
-                if time > 0
-                    $rootScope.hourTimeout  = $timeout fnTimeout, 1000
-                else $state.go 'nogame'
-
-            $rootScope.hourTimeout  = $timeout fnTimeout, 1000
-
-            $http.get serverUrl + "/api/points"
-            .success (data) ->
-                $rootScope.points = data
-                $rootScope.points.forEach (point) ->
-                    $http.get serverUrl + "/api/points/"+ point.id
-                    .success (data) ->
-                        point.coordinates = { latitude: point.lat, longitude: point.lng }
-                        point.options = {
-                            labelContent: Math.abs(data.energy) || '0'
-                            labelClass: 'map-label side-' + data.side
-                        }
-                        point.icon =
-                            path: ''
-                        point.data = data
-        .error (data) ->
-            $state.go 'nogame'
-
         if !$rootScope.validUser()
             $state.go 'login'
+        else
+            $http.get serverUrl + '/api/games/current'
+            .success (game) ->
+                $rootScope.currentGame = game
+                getSide($rootScope, $http)
+                console.log game
+
+                fnTimeout = () ->
+                    time = (new Date(game.endTime) - new Date(Date.now()))
+                    console.log time, new Date(game.endTime).toISOString(), new Date(Date.now()).toISOString()
+
+                    diff = Math.floor(time / 1000)
+                    secs_diff = diff % 60
+                    diff = Math.floor(diff / 60)
+                    mins_diff = diff % 60
+                    diff = Math.floor(diff / 60)
+                    hours_diff = diff
+                    diff = Math.floor(diff / 24)
+
+                    $rootScope.endTime = if time > 0 then "#{(if hours_diff<10 then '0' else '') + hours_diff}:#{(if mins_diff<10 then '0' else '') + mins_diff}:#{(if secs_diff<10 then '0' else '') + secs_diff}" else "00:00:00"
+                    if time > 0
+                        $rootScope.hourTimeout  = $timeout fnTimeout, 1000
+                    else $state.go 'nogame'
+
+                $rootScope.hourTimeout  = $timeout fnTimeout, 1000
+
+                $http.get serverUrl + "/api/points"
+                .success (data) ->
+                    $rootScope.points = data
+                    $rootScope.points.forEach (point) ->
+                        $http.get serverUrl + "/api/points/"+ point.id
+                        .success (data) ->
+                            point.coordinates = { latitude: point.lat, longitude: point.lng }
+                            point.options = {
+                                labelContent: Math.abs(data.energy) || '0'
+                                labelClass: 'map-label side-' + data.side
+                            }
+                            point.icon =
+                                path: ''
+                            point.data = data
+            .error (data) ->
+                $state.go 'nogame'
 
         $scope.map =
             zoom: 15
