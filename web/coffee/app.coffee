@@ -75,11 +75,17 @@ App.config ($stateProvider, $urlRouterProvider) ->
         controller: [
             '$rootScope'
             '$state'
-            ($rootScope, $state) ->
+            '$http'
+            ($rootScope, $state, $http) ->
                 if !$rootScope.validUser()
                     $state.go 'login'
-                else if !$rootScope.currentGame
-                    $state.go 'nogame'
+                else
+                    $http.get serverUrl + '/api/games/current'
+                    .success (game) ->
+                        $rootScope.currentGame = game
+
+                    .error (err) ->
+                        $state.go 'nogame'
         ]
 
     .state 'login',
@@ -165,13 +171,14 @@ App.controller 'playCtrl', [
         else
             $http.get serverUrl + '/api/games/current'
             .success (game) ->
+
+
+
                 $rootScope.currentGame = game
                 getSide($rootScope, $http)
-                console.log game
 
                 fnTimeout = () ->
                     time = (new Date(game.endTime) - new Date(Date.now()))
-                    console.log time, new Date(game.endTime).toISOString(), new Date(Date.now()).toISOString()
 
                     diff = Math.floor(time / 1000)
                     secs_diff = diff % 60
@@ -255,12 +262,13 @@ App.controller 'playCtrl', [
 
             $rootScope.socket.on 'point:update', (data) ->
                 point = p for p in $scope.points when p.id == data.point.id
-                point.options = {
-                    labelAnchor: '0 0'
-                    labelContent: Math.abs(data.gamePoint.energy) || '0'
-                    labelClass: 'map-label side-' + data.gamePoint.side
-                }
-                point.data = data.gamePoint
+                if point
+                    point.options = {
+                        labelAnchor: '0 0'
+                        labelContent: Math.abs(data.gamePoint.energy) || '0'
+                        labelClass: 'map-label side-' + data.gamePoint.side
+                    }
+                    point.data = data.gamePoint
 
             $rootScope.socket.on 'user:update', (data) ->
                 if data.energy then $rootScope.user.energy = data.energy
@@ -305,6 +313,7 @@ App.controller 'loginCtrl', [
                 $rootScope.socket.disconnect()
                 $rootScope.socket = io wsUrl
 
+                window.location.reload true
                 $state.go 'play'
             .error (data) ->
                 if data.type == 'AuthenticationError'
@@ -403,6 +412,11 @@ App.controller 'nogameCtrl', [
     '$state'
     '$http'
     ($rootScope, $scope, $state, $http) ->
+        if !$rootScope.validUser()
+            $state.go 'login'
+        else if $rootScope.currentGame
+            $state.go 'play'
+
         $http.get serverUrl + '/api/games'
         .success (games) ->
             $scope.games = games
@@ -413,7 +427,7 @@ App.controller 'nogameCtrl', [
                     game.startDate = moment(new Date(game.startTime)).format "dddd Do MMMM HH:mm"
                     game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
-            console.log data
+            $state.go 'nogame'
 ]
 
 # RUN !!
@@ -454,7 +468,12 @@ App.run [
             notify "Hello there "+data
             
         $rootScope.validUser = () ->
-            return !!localStorage.user
+            user = null
+            if localStorage.user
+                user = JSON.parse localStorage.user
+                if user && user.id && !$rootScope.user.id
+                    $rootScope.user = user
+            return !!(user && user.id)
         
         $rootScope.updateVitals = ->
             $http
@@ -470,6 +489,7 @@ App.run [
 
 getSide = ($rootScope, $http) ->
     if $rootScope.validUser() and $rootScope.currentGame
+        console.log
         $http
             withCredentials: true
             url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
