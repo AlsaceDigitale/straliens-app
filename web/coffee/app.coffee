@@ -481,8 +481,9 @@ App.run [
                 url: serverUrl + "/api/users/me",
                 method: "GET"
             .success (data) ->
-                if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
-                if data.gameUser.score then $rootScope.user.score = data.gameUser.score
+                if data.gameUser
+                    if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
+                    if data.gameUser.score then $rootScope.user.score = data.gameUser.score
 
         $rootScope.updateVitals()
 ]
