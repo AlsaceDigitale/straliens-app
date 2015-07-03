@@ -206,9 +206,6 @@ App.controller 'checkCtrl', [
                 url: serverUrl + "/api/points/#{$state.params.id}/check/"
                 method: 'GET'
                 withCredentials: true
-                params:
-                    lat: position.coords.latitude
-                    lng: position.coords.longitude
             .success (data) ->
                 $rootScope.user.energy = 0
                 $state.go 'play'
