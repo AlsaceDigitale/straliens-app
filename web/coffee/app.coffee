@@ -202,21 +202,21 @@ App.controller 'checkCtrl', [
 
     ($rootScope, $scope, $http, $state, geolocation) ->
         geolocation().then ((err, position) ->
-            $http
-                url: serverUrl + "/api/points/#{$state.params.id}/check/"
-                method: 'GET'
-                withCredentials: true
-                params:
-                    lat: position.coords.latitude
-                    lng: position.coords.longitude
-
-            .success (data) ->
-                $rootScope.user.energy = 0
-                $state.go 'play'
-            .error (err) ->
-                if err.type == 'AccessDeniedError'
-                    relogin $rootScope, $http, $state
-                $state.go 'login'
+            action = () ->
+                $http
+                    url: serverUrl + "/api/points/#{$state.params.id}/check/"
+                    method: 'GET'
+                    withCredentials: true
+                    params:
+                        lat: position.coords.latitude
+                        lng: position.coords.longitude
+                .success (data) ->
+                    $rootScope.user.energy = 0
+                    $state.go 'play'
+                .error (err) ->
+                    if err.type == 'AccessDeniedError'
+                        relogin $rootScope, $http, $state, action
+                    $state.go 'login'
         )
         .catch (err) ->
             $http
@@ -646,7 +646,7 @@ getSide = ($rootScope, $http, $state) ->
             if err.type == 'AccessDeniedError'
                 relogin $rootScope, $http, $state
 
-relogin = ($rootScope, $http, $state) ->
+relogin = ($rootScope, $http, $state, callback) ->
     user = JSON.parse localStorage.user
     if user && user.id
         $http
@@ -671,6 +671,7 @@ relogin = ($rootScope, $http, $state) ->
 
             $rootScope.socket.disconnect()
             $rootScope.socket = io wsUrl
+            callback()
 
             $state.go 'play'
         .error (data) ->
