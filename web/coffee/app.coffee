@@ -204,6 +204,8 @@ App.controller 'checkCtrl', [
         $http
             url: serverUrl + "/api/points/#{$state.params.id}/check/"
             method: 'GET'
+            withCredentials: true
+
         .success (data) ->
             $rootScope.user.energy = 0
             $state.go 'play'
@@ -391,6 +393,8 @@ App.controller 'loginCtrl', [
             $http
                 url: serverUrl + "/api/services/login?sections=team",
                 method: "POST"
+                withCredentials: true
+
                 data:
                     nickname: form.nickname
                     password: form.password
@@ -448,6 +452,8 @@ App.controller 'signupCtrl', [
                 $http
                     url: serverUrl + '/api/users?sections=team',
                     method: "POST"
+                    withCredentials: true
+
                     data:
                         nickname: user.nickname
                         email: user.email
@@ -566,6 +572,8 @@ App.run [
 
         $http
             url: serverUrl + '/api/services/logged-in'
+            withCredentials: true
+
         .success (status) ->
             if localStorage.user and (JSON.parse localStorage.user).id
                 user = JSON.parse localStorage.user
@@ -605,6 +613,8 @@ App.run [
             $http
                 url: serverUrl + "/api/users/me",
                 method: "GET"
+                withCredentials: true
+
             .success (data) ->
                 if data.gameUser
                     if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
