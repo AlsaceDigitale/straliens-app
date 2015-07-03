@@ -156,9 +156,8 @@ App.controller 'appCtrl', [
 App.controller 'scanCtrl', [
     '$rootScope'
     '$scope'
-    '$http'
     '$state'
-    ($rootScope, $scope, $http, $state) ->
+    ($rootScope, $scope, $state) ->
         $scope.videoSources = []
 
         $scope.onSuccess = (data) ->
@@ -207,7 +206,9 @@ App.controller 'checkCtrl', [
             .success (data) ->
                 $rootScope.user.energy = 0
                 $state.go 'play'
-            .error (data) ->
+            .error (err) ->
+                if err.type == 'AccessDeniedError'
+                    relogin $rootScope, $http, $state
                 $state.go 'login'
         )
         .catch (err) ->
@@ -219,7 +220,10 @@ App.controller 'checkCtrl', [
                     errorCode: err.code
                     errorMessage: err.message
             .success (data) ->
-                $rootScope.user.energy = 0            
+                $rootScope.user.energy = 0
+            .error (err) ->
+                if err.type == 'AccessDeniedError'
+                    relogin $rootScope, $http, $state
             $state.go 'play'
 
 
@@ -274,11 +278,8 @@ App.controller 'playCtrl', [
         else
             $http.get serverUrl + '/api/games/current'
             .success (game) ->
-
-
-
                 $rootScope.currentGame = game
-                getSide($rootScope, $http)
+                getSide($rootScope, $http, $state)
 
                 fnTimeout = () ->
                     time = (new Date(game.endTime) - new Date(Date.now()))
@@ -294,7 +295,11 @@ App.controller 'playCtrl', [
                     $rootScope.endTime = if time > 0 then "#{(if hours_diff<10 then '0' else '') + hours_diff}:#{(if mins_diff<10 then '0' else '') + mins_diff}:#{(if secs_diff<10 then '0' else '') + secs_diff}" else "00:00:00"
                     if time > 0
                         $rootScope.hourTimeout  = $timeout fnTimeout, 1000
-                    else $state.go 'nogame'
+                    else
+                        if $rootScope.currentGame
+                            $state.go 'endgame'
+                        else
+                            $state.go 'nogame'
 
                 $rootScope.hourTimeout  = $timeout fnTimeout, 1000
 
@@ -318,8 +323,6 @@ App.controller 'playCtrl', [
                             point.icon =
                                 path: ''
                             point.data = data
-            .error (data) ->
-                $state.go 'nogame'
 
         $scope.map =
             zoom: 15
@@ -413,9 +416,10 @@ App.controller 'loginCtrl', [
                 $rootScope.user.name = data.nickname
                 $rootScope.user.teamId = data.teamId
                 $rootScope.user.team = data.team
+                $rootScope.user.password = form.password
 
                 localStorage.user = JSON.stringify $rootScope.user
-                getSide($rootScope, $http)
+                getSide($rootScope, $http, $state)
 
                 $rootScope.updateVitals()
 
@@ -472,9 +476,10 @@ App.controller 'signupCtrl', [
                     $rootScope.user.name = data.nickname
                     $rootScope.user.teamId = data.teamId
                     $rootScope.user.team = data.team
+                    $rootScope.user.password = form.password
 
                     localStorage.user = JSON.stringify $rootScope.user
-                    getSide($rootScope, $http)
+                    getSide($rootScope, $http, $state)
 
                     $rootScope.updateVitals()
 
@@ -502,8 +507,6 @@ App.controller 'signupCtrl', [
                         teamPassword: form.teamPassword.$viewValue
                         teamId: team.id
                     createUser(user)
-                .error (data) ->
-                    # TODO
 
             else
                 user =
@@ -555,12 +558,22 @@ App.run [
         $rootScope.endTime = '00:00:00'
         $rootScope.points = {}
 
+        $rootScope.logged = false
+
+        $rootScope.$watch 'logged', (newValue, oldValue) ->
+            if newValue == false && (JSON.parse localStorage.user).id
+                relogin $rootScope, $http, $state
+
         $http
             withCredentials: true
             url: serverUrl + '/api/services/logged-in'
         .success (status) ->
-            if status == true and localStorage.user and (JSON.parse localStorage.user).id
-                $rootScope.user = JSON.parse localStorage.user
+            if localStorage.user and (JSON.parse localStorage.user).id
+                user = JSON.parse localStorage.user
+                if status == true and
+                    $rootScope.user = user
+                else
+
             else
                 delete localStorage.user
 
@@ -599,9 +612,8 @@ App.run [
         $rootScope.updateVitals()
 ]
 
-getSide = ($rootScope, $http) ->
+getSide = ($rootScope, $http, $state) ->
     if $rootScope.validUser() and $rootScope.currentGame
-        console.log
         $http
             withCredentials: true
             url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
@@ -609,6 +621,36 @@ getSide = ($rootScope, $http) ->
             if side == "EARTHLINGS"
                 side = "TERRIENS"
             $rootScope.side = side
-            # TODO : ajouter des classes pour les couleurs
+        .error (err) ->
+            if err.type == 'AccessDeniedError'
+                relogin $rootScope, $http, $state
+
+relogin = ($rootScope, $http, $state) ->
+    user = JSON.parse localStorage.user
+    if user && user.id
+        $http
+            withCredentials: true
+            url: serverUrl + "/api/services/login?sections=team",
+            method: "POST"
+            data:
+                nickname: user.name
+                password: user.password
+
+        .success (data) ->
+            $rootScope.user.id = data.id
+            $rootScope.user.name = data.nickname
+            $rootScope.user.teamId = data.teamId
+            $rootScope.user.team = data.team
+            $rootScope.user.password = user.password
+
+            localStorage.user = JSON.stringify $rootScope.user
+            getSide $rootScope, $http, $state
+
+            $rootScope.updateVitals()
+
+            $rootScope.socket.disconnect()
+            $rootScope.socket = io wsUrl
+
+            $state.go 'play'
         .error (data) ->
-            console.log data
+            $state.go 'login'
