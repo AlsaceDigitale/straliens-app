@@ -1,4 +1,4 @@
-@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies', 'cgNotify']
+@App = angular.module 'straliens', ['ui.router', 'uiGmapgoogle-maps', 'ui.bootstrap', 'ngCookies', 'cgNotify', 'qrScanner']
 if location.host == 'straliens.scalingo.io' or location.host == 'straliens.eu'
     serverUrl = 'http://straliens-server.scalingo.io'
     wsUrl = 'ws://straliens-server.scalingo.io'
@@ -106,6 +106,11 @@ App.config ($stateProvider, $urlRouterProvider) ->
         title: 'check'
         templateUrl: '/partials/check.html'
 
+    .state 'scan',
+        url: '/scan'
+        controller: 'scanCtrl'
+        title: 'scan qr code'
+        templateUrl: '/partials/scan.html'
 
     .state 'nogame',
         url: '/nogame'
@@ -120,6 +125,43 @@ App.controller 'appCtrl', [
     '$scope'
     ($scope) ->
 ]
+
+
+# Scan controller
+# ---------------
+App.controller 'scanCtrl', [
+    '$rootScope'
+    '$scope'
+    '$http'
+    '$state'
+    ($rootScope, $scope, $http, $state) ->
+        $scope.videoSources = []
+
+        $scope.onSuccess = (data) ->
+            $scope.data = data
+            console.log data
+
+        $scope.onError = (data) ->
+            #console.log data
+
+        $scope.$watch 'source', (newValue, oldValue) ->
+            console.log newValue
+
+
+        if typeof MediaStreamTrack == 'undefined' || typeof MediaStreamTrack.getSources == 'undefined'
+            console.log 'This browser does not support MediaStreamTrack'
+        else
+            MediaStreamTrack.getSources (sources) ->
+                i = 1
+                for source in sources
+                    if (source.kind == 'video')
+                        source.n = i
+                        i++
+                        if source.facing is 'user' then source.name = 'frontale'
+                        else if source.facing is 'environment' then source.name = 'arrière'
+                        $scope.videoSources.push source
+]
+
 
 # Check controller
 # ---------------

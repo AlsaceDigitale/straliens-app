@@ -8,7 +8,8 @@
     "angular-google-maps": "~2.1.4",
     "angular-cookies": "~1.4.1",
     "angular-notify": "~2.5.0",
-    "moment": "~2.10.3"
+    "moment": "~2.10.3",
+    "angular-qr-scanner": "https://github.com/maxaille/angular-qr-scanner.git#0.2.0"
   },
   "devDependencies": {
     "angular-bootstrap": "~0.13.0"
