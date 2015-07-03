@@ -118,6 +118,30 @@ App.config ($stateProvider, $urlRouterProvider) ->
         title: 'no game'
         templateUrl: '/partials/nogame.html'
 
+App.factory 'GeolocationService', [
+    '$q'
+    '$window'
+    '$rootScope'
+    ($q, $window, $rootScope) ->
+        ->
+            deferred = $q.defer()
+            if !$window.navigator
+                $rootScope.$apply ->
+                    deferred.reject new Error('Geolocation is not supported')
+                    return
+            else
+                $window.navigator.geolocation.getCurrentPosition ((position) ->
+                    $rootScope.$apply ->
+                        deferred.resolve position
+                        return
+                    return
+                ), (error) ->
+                    $rootScope.$apply ->
+                        deferred.reject error
+                        return
+                    return
+            deferred.promise
+]
 
 # Main controller
 # ---------------
@@ -170,17 +194,39 @@ App.controller 'checkCtrl', [
     '$scope'
     '$http'
     '$state'
-    ($rootScope, $scope, $http, $state) ->
-        $http
-            url: serverUrl + "/api/points/#{$state.params.id}/check/"
-            method: 'GET'
-            withCredentials: true
+    'GeolocationService'
 
-        .success (data) ->
-            $rootScope.user.energy = 0
-            $state.go 'play'
-        .error (data) ->
-            $state.go 'login'
+    ($rootScope, $scope, $http, $state, geolocation) ->
+        geolocation().then ((err, position) ->
+            $http
+                url: serverUrl + "/api/points/#{$state.params.id}/check/"
+                method: 'GET'
+                withCredentials: true
+                params:
+                    lat: position.coords.latitude
+                    lng: position.coords.longitude
+
+            .success (data) ->
+                $rootScope.user.energy = 0
+                $state.go 'play'
+            .error (data) ->
+                $state.go 'login'
+        )
+        .catch (err) ->
+            $http
+                url: serverUrl + "/api/points/#{$state.params.id}/check/"
+                method: 'GET'
+                withCredentials: true
+                params:
+                    errorCode: err.code
+                    errorMessage: err.message
+            .success (data) ->
+                $rootScope.user.energy = 0
+                $state.go 'play'
+            .error (data) ->
+                $state.go 'login'
+
+
 ]
 
 # Notify controller
