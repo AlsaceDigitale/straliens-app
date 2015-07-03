@@ -5,6 +5,18 @@ body
     margin: 0
     font-family: "Arial"
 
+
+@font-face
+    $path: "/resources/BebasNeue_Regular"
+    font-family: 'BebasNeue'
+    src: url($path + '.otf') format('opentype'), url($path + '.ttf') format('truetype')
+
+@font-face
+    $path: "/resources/BebasNeue_Bold"
+    font-family: 'BebasNeue'
+    font-weight: 700
+    src: url($path + '.otf') format('opentype'), url($path + '.ttf') format('truetype')
+
 @import "var"
 @import "game"
 @import "overlay"

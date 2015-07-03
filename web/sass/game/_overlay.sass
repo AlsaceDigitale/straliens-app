@@ -1,18 +1,22 @@
 // other view container
 .overlay
-    position: absolute
-    top: 0
-    left: 0
-    height: 100%
-    width: 100%
-    background: rgba($black, 0.8)
-    .login
-        position: absolute
-        top: 50%
-        left: 50%
-        transform: translate(-50%, -50%)
-        -webkit-transform: translate(-50%, -50%)
+    &:after
+        content: ""
+        display: block
+        position: fixed
+        top: 0
+        left: 0
+        height: 100%
         width: 100%
+        background: rgba($black, 0.8)
+    .login
+        z-index: 1
+        position: absolute
+        top: 10px
+        left: 50%
+        -webkit-transform: translate(-50%, 0%)
+        transform: translate(-50%, 0%)
+        width: calc(100% - 15px)
         max-width: 800px
         .wrapper
             padding: 15px
