@@ -9,9 +9,10 @@ html(ng-app="straliens")
     body(ng-controller="notifCtrl")
         .game(ng-controller="playCtrl" ng-class="side")
             nav.header(ng-hide="side == 'NEUTRE'")
-                .left SCORE {{user.score}}
+                span.score SCORE {{user.score}}
                 //button(ng-click="shownotify()") TEST
-                .right ENERGIE {{user.energy}}
+                a.scan(ui-sref="scan" ng-class="side") SCANNER
+                span.energy ENERGIE {{user.energy}}
             section
 
                 ui-gmap-google-map(
