@@ -208,6 +208,7 @@ App.controller 'checkCtrl', [
             $rootScope.user.energy = 0
             $state.go 'play'
         .error (err) ->
+
 #                if err.type == 'AccessDeniedError'
 #                    relogin $rootScope, $http, $state, action
             $state.go 'login'
@@ -314,7 +315,7 @@ App.controller 'playCtrl', [
                 latitude: 48.5819
                 longitude: 7.75104
             options:
-                minZoom: 15
+                minZoom: 13
                 maxZoom: 20
                 panControl: false
                 zoomControl: true
