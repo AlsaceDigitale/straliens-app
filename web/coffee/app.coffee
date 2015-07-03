@@ -118,6 +118,13 @@ App.config ($stateProvider, $urlRouterProvider) ->
         title: 'no game'
         templateUrl: '/partials/nogame.html'
 
+
+    .state 'endgame',
+        url: '/endgame'
+        controller: 'endgameCtrl'
+        title: 'end game'
+        templateUrl: '/partials/endgame.html'
+
 App.factory 'GeolocationService', [
     '$q'
     '$window'
@@ -296,10 +303,7 @@ App.controller 'playCtrl', [
                     if time > 0
                         $rootScope.hourTimeout  = $timeout fnTimeout, 1000
                     else
-                        if $rootScope.currentGame
-                            $state.go 'endgame'
-                        else
-                            $state.go 'nogame'
+                        $state.go 'endgame'
 
                 $rootScope.hourTimeout  = $timeout fnTimeout, 1000
 
@@ -540,6 +544,23 @@ App.controller 'nogameCtrl', [
                     game.endDate = moment(new Date(game.endTime)).format "HH:mm"
         .error (data) ->
             $state.go 'nogame'
+]
+
+
+App.controller 'endgameCtrl', [
+    '$rootScope'
+    '$scope'
+    '$state'
+    '$http'
+    ($rootScope, $scope, $state, $http) ->
+        if !$rootScope.validUser()
+            $state.go 'login'
+
+        $http.get serverUrl + '/api/games/current'
+        .success (game) ->
+            $scope.data = game
+        .error (data) ->
+            #$state.go 'nogame'
 ]
 
 # RUN !!
