@@ -302,7 +302,7 @@ App.controller 'playCtrl', [
                             else
                                 point.options = {
                                     labelContent: Math.abs(data.energy) || '0'
-                                    labelClass: 'map-label side-#{data.side}'
+                                    labelClass: 'map-label side-' + data.side
                                 }
                             point.icon =
                                 path: ''
