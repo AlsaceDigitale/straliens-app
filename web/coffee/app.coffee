@@ -305,10 +305,16 @@ App.controller 'playCtrl', [
                         $http.get serverUrl + "/api/points/"+ point.id
                         .success (data) ->
                             point.coordinates = { latitude: point.lat, longitude: point.lng }
-                            point.options = {
-                                labelContent: Math.abs(data.energy) || '0'
-                                labelClass: 'map-label side-' + data.side
-                            }
+                            if data.type == 'cathedrale'
+                                point.options = {
+                                    labelContent: (data.energy+100)/2 || '0'
+                                    labelClass: 'map-label-cathedrale'
+                                }
+                            else
+                                point.options = {
+                                    labelContent: Math.abs(data.energy) || '0'
+                                    labelClass: 'map-label side-#{data.side}'
+                                }
                             point.icon =
                                 path: ''
                             point.data = data
