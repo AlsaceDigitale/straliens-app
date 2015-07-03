@@ -374,6 +374,7 @@ App.controller 'playCtrl', [
         uiGmapIsReady.promise().then ->
             $rootScope.socket.on 'score:update', (userScore, teamScore) ->
                 $rootScope.user.score = userScore
+                $rootScope.team.score = teamScore
                 $rootScope.$apply()
 
             $rootScope.socket.on 'point:update', (data) ->
@@ -605,6 +606,9 @@ App.run [
             energy: 0
             id: null
 
+        $rootScope.team =
+            score: 0
+
         $rootScope.side = 'NEUTRE'
 
         $rootScope.socket = io wsUrl
@@ -629,6 +633,8 @@ App.run [
                 if data.gameUser
                     if data.gameUser.energy then $rootScope.user.energy = data.gameUser.energy
                     if data.gameUser.score then $rootScope.user.score = data.gameUser.score
+                if data.gameTeam
+                    if data.gameTeam.score then $rootScope.team.score = data.gameTeam.score
 
         $rootScope.updateVitals()
 ]

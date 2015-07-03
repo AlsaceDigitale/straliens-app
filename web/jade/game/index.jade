@@ -12,7 +12,7 @@ html(ng-app="straliens")
                 span.score SCORE {{user.score}}
                 //button(ng-click="shownotify()") TEST
                 a.scan(ui-sref="scan" ng-class="side") SCANNER
-                span.energy ENERGIE {{user.energy}}
+                span.energy SCORE TEAM {{team.score}}
             section
 
                 ui-gmap-google-map(
@@ -84,7 +84,7 @@ html(ng-app="straliens")
 
             footer(ng-hide="side == 'NEUTRE'")
                 .wrapper
-                    span.msg MSG
+                    span.msg ENERGIE {{user.energy}}
                     span.time {{endTime}}
                     .side {{side | uppercase}}
 
