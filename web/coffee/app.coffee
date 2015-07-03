@@ -201,37 +201,22 @@ App.controller 'checkCtrl', [
     'GeolocationService'
 
     ($rootScope, $scope, $http, $state, geolocation) ->
-        geolocation().then ((err, position) ->
-            action = () ->
-                $http
-                    url: serverUrl + "/api/points/#{$state.params.id}/check/"
-                    method: 'GET'
-                    withCredentials: true
-                    params:
-                        lat: position.coords.latitude
-                        lng: position.coords.longitude
-                .success (data) ->
-                    $rootScope.user.energy = 0
-                    $state.go 'play'
-                .error (err) ->
-                    if err.type == 'AccessDeniedError'
-                        relogin $rootScope, $http, $state, action
-                    $state.go 'login'
-        )
-        .catch (err) ->
+        action = () ->
             $http
                 url: serverUrl + "/api/points/#{$state.params.id}/check/"
                 method: 'GET'
                 withCredentials: true
                 params:
-                    errorCode: err.code
-                    errorMessage: err.message
+                    lat: position.coords.latitude
+                    lng: position.coords.longitude
             .success (data) ->
                 $rootScope.user.energy = 0
+                $state.go 'play'
             .error (err) ->
                 if err.type == 'AccessDeniedError'
-                    relogin $rootScope, $http, $state
-            $state.go 'play'
+                    relogin $rootScope, $http, $state, action
+                $state.go 'login'
+        action()
 
 
 ]
