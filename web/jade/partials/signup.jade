@@ -56,7 +56,7 @@
                     i.glyphicon.glyphicon-refresh(ng-show="loadingTeams")
                     label(for='teamName' ng-show='errors.teamName' class='errors')
                         | {{errors.teamName}}
-                .form-group(ng-if="resultTeam.name")
+                .form-group
                     label(for='teamPassword') {{!team() ? 'Créer le c' : 'C'}}ode d'accès de l'équipe
                     input.form-control(
                         type='text'
@@ -68,7 +68,7 @@
                         required='')
                     label(for='teamPassword' ng-show='errors.teamPassword' class='errors')
                         | {{errors.teamPassword}}
-                .form-group(ng-if="resultTeam.name && !team()")
+                .form-group(ng-if="!team()")
                     label(for='teamSlogan') Créer le slogan de l'équipe
                     input.form-control(
                         type='text'
@@ -87,5 +87,5 @@
                         placeholder='Tapez le slogan de la team'
                         ng-model="team().slogan"
                         disabled)
-                hr
-                button.btn.btn-primary.btn-fw(ng-click="create(signupForm)" ng-disabled="signupForm.$invalid") Valider
+                button.btn.btn-success.btn-fw(ng-click="create(signupForm)" ng-disabled="signupForm.$invalid") Valider
+            button.btn.btn-primary.btn-fw(ui-sref="login") Login
