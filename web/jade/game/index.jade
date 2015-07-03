@@ -7,8 +7,8 @@ html(ng-app="straliens")
         link(rel="stylesheet" href="/css/game/styles.min.css")
 
     body(ng-controller="notifCtrl")
-        .game(ng-controller="playCtrl" ng-class="{terriens: side == 'TERRIENS'}")
-            nav.header
+        .game(ng-controller="playCtrl" ng-class="side")
+            nav.header(ng-hide="side == 'NEUTRE'")
                 .left SCORE {{user.score}}
                 //button(ng-click="shownotify()") TEST
                 .right ENERGIE {{user.energy}}
@@ -26,7 +26,7 @@ html(ng-app="straliens")
                         icon="'icon'"
                         control="markers")
 
-            footer
+            footer(ng-hide="side == 'NEUTRE'")
                 .wrapper
                     .left MSG
                     .right {{endTime}}
@@ -45,6 +45,9 @@ script(src='/plugins/angular-google-maps/dist/angular-google-maps.min.js')
 script(src='/plugins/angular-ui-router/release/angular-ui-router.min.js')
 script(src='/plugins/angular-cookies/angular-cookies.min.js')
 script(src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js')
+
+script(src="/plugins/angular-qr-scanner/qr-scanner.js")
+script(src="/plugins/angular-qr-scanner/src/jsqrcode-combined.min.js")
 
 // Angular bootstrap-ui
 script(src='/plugins/angular-bootstrap/ui-bootstrap.min.js')
