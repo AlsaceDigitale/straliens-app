@@ -155,6 +155,25 @@ App.controller 'notifCtrl', [
         $scope.shownotify = ->
             notify "Hello there" 
 ]
+
+App.controller 'chat', [
+    '$scope',
+
+    ($scope) ->
+        $scope.chatClass = ""
+        $scope.tab = "room"
+
+        $scope.open = () ->
+            if $scope.chatClass == 'toggled'
+              $scope.chatClass = ''
+            else
+              $scope.chatClass = 'toggled'
+
+        $scope.openTab = (tab) ->
+            alert tab
+            $scope.tab = tab
+
+]
     
 # Index page controller
 # ---------------------
