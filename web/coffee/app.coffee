@@ -219,10 +219,8 @@ App.controller 'checkCtrl', [
                     errorCode: err.code
                     errorMessage: err.message
             .success (data) ->
-                $rootScope.user.energy = 0
-                $state.go 'play'
-            .error (data) ->
-                $state.go 'login'
+                $rootScope.user.energy = 0            
+            $state.go 'play'
 
 
 ]
