@@ -204,7 +204,6 @@ App.controller 'checkCtrl', [
         $http
             url: serverUrl + "/api/points/#{$state.params.id}/check/"
             method: 'GET'
-            withCredentials: true
         .success (data) ->
             $rootScope.user.energy = 0
             $state.go 'play'
@@ -389,7 +388,6 @@ App.controller 'loginCtrl', [
 
         $scope.validate = (form) ->
             $http
-                withCredentials: true
                 url: serverUrl + "/api/services/login?sections=team",
                 method: "POST"
                 data:
@@ -447,7 +445,6 @@ App.controller 'signupCtrl', [
         $scope.create = (form) ->
             createUser = (user) ->
                 $http
-                    withCredentials: true
                     url: serverUrl + '/api/users?sections=team',
                     method: "POST"
                     data:
@@ -567,7 +564,6 @@ App.run [
                 relogin $rootScope, $http, $state
 
         $http
-            withCredentials: true
             url: serverUrl + '/api/services/logged-in'
         .success (status) ->
             if localStorage.user and (JSON.parse localStorage.user).id
@@ -606,7 +602,6 @@ App.run [
         
         $rootScope.updateVitals = ->
             $http
-                withCredentials: true
                 url: serverUrl + "/api/users/me",
                 method: "GET"
             .success (data) ->
@@ -622,7 +617,6 @@ App.run [
 getSide = ($rootScope, $http, $state) ->
     if $rootScope.validUser() and $rootScope.currentGame
         $http
-            withCredentials: true
             url: serverUrl + "/api/users/#{$rootScope.user.id}/side"
         .success (side) ->
             if side == "EARTHLINGS"
@@ -636,7 +630,6 @@ relogin = ($rootScope, $http, $state, callback) ->
     user = JSON.parse localStorage.user
     if user && user.id
         $http
-            withCredentials: true
             url: serverUrl + "/api/services/login?sections=team",
             method: "POST"
             data:
