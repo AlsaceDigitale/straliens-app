@@ -677,7 +677,8 @@ relogin = ($rootScope, $http, $state, callback) ->
 
             $rootScope.socket.disconnect()
             $rootScope.socket = io wsUrl
-            callback()
+            if typeof callback is 'function'
+                callback()
 
             $state.go 'play'
         .error (data) ->
