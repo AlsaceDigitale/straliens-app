@@ -139,14 +139,12 @@ App.controller 'scanCtrl', [
 
         $scope.onSuccess = (data) ->
             $scope.data = data
-            console.log data
+            if data.indexOf 'tc3.fr' > -1
+                document.location = data.toString()
 
-        $scope.onError = (data) ->
-            #console.log data
-
-        $scope.$watch 'source', (newValue, oldValue) ->
-            console.log newValue
-
+        $scope.onError =  ->
+            alert "Vous avez refusé l'accès à la camera"
+            $state.go 'play'
 
         if typeof MediaStreamTrack == 'undefined' || typeof MediaStreamTrack.getSources == 'undefined'
             console.log 'This browser does not support MediaStreamTrack'
@@ -501,6 +499,8 @@ App.run [
     'notify'
     ($rootScope, $state, $window, $http, notify) ->
         $rootScope.$state = $state
+        $rootScope.$http = $http
+
 
         $rootScope.endTime = '00:00:00'
         $rootScope.points = {}
