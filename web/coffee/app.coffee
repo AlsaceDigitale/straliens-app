@@ -316,7 +316,7 @@ App.controller 'playCtrl', [
                             point.coordinates = { latitude: point.lat, longitude: point.lng }
                             if data.type == 'cathedrale'
                                 point.options = {
-                                    labelContent: (data.energy+100)/2 || '0'
+                                    labelContent: Math.abs(data.energy) || '0'
                                     labelClass: 'map-label-cathedrale'
                                 }
                             else
